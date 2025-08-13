@@ -9,76 +9,55 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-enum piece_type
-{
-    NONE,
-    PAWN,
-    BISHOP,
-    KNIGHT,
-    ROOK,
-    QUEEN,
-    KING
-};
+#define NONE        0x00
 
-enum piece_color
-{
-    EMPTY,
-    BLACK,
-    WHITE
-};
+#define PAWN        0x01
+#define BISHOP      0x02
+#define KNIGHT      0x03
+#define ROOK        0x04
+#define QUEEN       0x05
+#define KING        0x06
+#define PIECE_TYPE  0x08
 
-struct piece
-{
-    enum piece_type type;
-    enum piece_color color;
-};
+#define BLACK       0x10
+#define WHITE       0x20
+#define PIECE_COLOR 0x30
 
 struct board
 {
-    struct piece pieces[64];
+    int pieces[64];
     bool white_to_move;
 };
 
-void set_piece_type(struct board *b, int rank, int file, enum piece_type pt)
-{
-    b->pieces[rank*8+file].type = pt;
-}
-
-void set_piece_color(struct board *b, int rank, int file, enum piece_color pc)
-{
-    b->pieces[rank*8+file].color = pc;
-}
-
-struct piece get_piece(const struct board *b, int rank, int file)
+int get_piece(const struct board *b, int rank, int file)
 {
     return b->pieces[rank*8+file];
 }
 
-void place_piece(struct board *b, struct piece p, int rank, int file)
+void set_piece(struct board *b, int rank, int file, int piece)
 {
-    int index = rank*8 + file;
-    b->pieces[index] = p;
+    b->pieces[rank*8 + file] = piece;
 }
 
 bool move_piece(struct board *b, int rank_from, int file_from, int rank_to, int file_to)
 {
     int i_from = rank_from * 8 + file_from;
-    struct piece p = b->pieces[i_from];
+    int piece = b->pieces[i_from];
 
     // You can't move nothing.
-    if (p.color == EMPTY || p.type == NONE)
+    if (piece & PIECE_COLOR == NONE || piece & PIECE_TYPE == NONE)
     {
         return false;
     }
 
     // A piece cannot display another piece of the same color.
-    struct piece dest_piece = get_piece(b, rank_to, file_to);
-    if (p.color == dest_piece.color)
+    int dest_piece = get_piece(b, rank_to, file_to);
+    if (piece & PIECE_COLOR == dest_piece & PIECE_COLOR)
     {
         return false;
     }
 
-    switch (p.type)
+    switch (piece & PIECE_TYPE)
     {
         case KNIGHT:
             int diff_rank = abs(rank_from - rank_to);
@@ -95,7 +74,7 @@ bool move_piece(struct board *b, int rank_from, int file_from, int rank_to, int 
             {
                 for (int file = MIN(file_from, file_to); file < MAX(file_from, file_to); file++)
                 {
-                    if (get_piece(b, rank_to, file).color != EMPTY)
+                    if (get_piece(b, rank_to, file) & PIECE_COLOR != NONE)
                     {
                         return false;
                     }
@@ -105,7 +84,7 @@ bool move_piece(struct board *b, int rank_from, int file_from, int rank_to, int 
             {
                 for (int rank = MIN(rank_from, rank_to); rank < MAX(rank_from, rank_to); rank++)
                 {
-                    if (get_piece(b, rank, file_to).color != EMPTY)
+                    if (get_piece(b, rank, file_to) & PIECE_COLOR != NONE)
                     {
                         return false;
                     }
@@ -120,47 +99,110 @@ bool move_piece(struct board *b, int rank_from, int file_from, int rank_to, int 
     }
 
     // Commit the move.
-    b->pieces[i_from].type = NONE;
-    b->pieces[i_from].color = EMPTY;
-    place_piece(b, p, rank_to, file_to);
+    b->pieces[i_from] = NONE;
+    set_piece(b, rank_to, file_to, piece);
 
     return true;
+}
+
+void apply_FEN(struct board *b, const char *fen)
+{
+    // piece placement
+    //                                             side to move
+    //                                               castling ability
+    //                                                    en passant target
+    //                                                      halfmove clock
+    //                                                        fullmove counter
+    // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+#define APPLY_FEN_STATE_PIECE_PLACEMENT 0
+#define APPLY_FEN_STATE_SIDE_TO_MOVE 1
+#define APPLY_FEN_STATE_CASTLING 2
+#define APPLY_FEN_STATE_EN_PASSANT 3
+#define APPLY_FEN_STATE_HALFMOVE 4
+#define APPLY_FEN_STATE_FULLMOVE 5
+
+    char c;
+    int state = APPLY_FEN_STATE_PIECE_PLACEMENT;
+    int rank = 7;
+    int file = 0;
+
+    for (int i = 0; c = fen[i]; i++)
+    {
+        if (c == ' ')
+        {
+            state++;
+            continue;
+        }
+
+        switch(state)
+        {
+            case APPLY_FEN_STATE_PIECE_PLACEMENT:
+                switch(c)
+                {
+                    // slash separates rank
+                    case '/':
+                        rank--;
+                        file = 0;
+                        break;
+
+                    // digit counts consecutive empty squares
+                    case '1': case '2': case '3': case '4':
+                    case '5': case '6': case '7': case '8':
+                        file += (c - '0');
+                        break;
+
+                    case 'p': set_piece(b, rank, file, BLACK | ROOK); file++; break;
+                    case 'n': set_piece(b, rank, file, BLACK | KNIGHT); file++; break;
+                    case 'b': set_piece(b, rank, file, BLACK | BISHOP); file++; break;
+                    case 'r': set_piece(b, rank, file, BLACK | ROOK); file++; break;
+                    case 'q': set_piece(b, rank, file, BLACK | QUEEN); file++; break;
+                    case 'k': set_piece(b, rank, file, BLACK | KING); file++; break;
+
+                    case 'P': set_piece(b, rank, file, WHITE | ROOK); file++; break;
+                    case 'N': set_piece(b, rank, file, WHITE | KNIGHT); file++; break;
+                    case 'B': set_piece(b, rank, file, WHITE | BISHOP); file++; break;
+                    case 'R': set_piece(b, rank, file, WHITE | ROOK); file++; break;
+                    case 'Q': set_piece(b, rank, file, WHITE | QUEEN); file++; break;
+                    case 'K': set_piece(b, rank, file, WHITE | KING); file++; break;
+                }
+
+                break;
+
+            case APPLY_FEN_STATE_SIDE_TO_MOVE:
+                // this can only ever be 'w' or 'b'
+                b->white_to_move = (c == 'w');
+                break;
+
+            case APPLY_FEN_STATE_CASTLING:
+                // TODO
+                break;
+
+            case APPLY_FEN_STATE_EN_PASSANT:
+                // TODO
+                break;
+
+            case APPLY_FEN_STATE_HALFMOVE:
+                // TODO
+                break;
+
+            case APPLY_FEN_STATE_FULLMOVE:
+                // TODO
+                break;
+        }
+    }
 }
 
 void init_board(struct board *b)
 {
     memset(b->pieces, 0, sizeof(b->pieces));
-
-    for (int file = 0; file < 8; file++)
-    {
-        for (int rank = 0; rank < 2; rank++)
-            set_piece_color(b, rank, file, WHITE);
-        for (int rank = 6; rank < 8; rank++)
-            set_piece_color(b, rank, file, BLACK);
-
-        set_piece_type(b, 1, file, PAWN);
-        set_piece_type(b, 6, file, PAWN);
-    }
-
-    for (int rank = 0; rank < 8; rank += 7)
-    {
-        set_piece_type(b, rank, 0, ROOK);
-        set_piece_type(b, rank, 1, KNIGHT);
-        set_piece_type(b, rank, 2, BISHOP);
-        set_piece_type(b, rank, 3, QUEEN);
-        set_piece_type(b, rank, 4, KING);
-        set_piece_type(b, rank, 5, BISHOP);
-        set_piece_type(b, rank, 6, KNIGHT);
-        set_piece_type(b, rank, 7, ROOK);
-    }
-
-    b->white_to_move = true;
+    apply_FEN(b, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 }
 
 void move_algebraic(struct board *b, const char *move)
 {
     int i = 0; // index into the move string
-    enum piece_type ptype;
+    int ptype;
 
     bool is_kingside_castle = false;
     bool is_queenside_castle = false;
@@ -255,17 +297,24 @@ void print_board(const struct board *b)
 
             printf(white_square ? PRINT_WSQUARE : PRINT_BSQUARE);
 
-            struct piece p = get_piece(b, rank, file);
-            bool white = p.color == WHITE;
+            int piece = get_piece(b, rank, file);
 
-            switch(p.type)
+            switch(piece)
             {
-                case PAWN:   printf(white ? UTF8_WPAWN : UTF8_BPAWN); break;
-                case BISHOP: printf(white ? UTF8_WBISHOP : UTF8_BBISHOP); break;
-                case KNIGHT: printf(white ? UTF8_WKNIGHT : UTF8_BKNIGHT); break;
-                case ROOK:   printf(white ? UTF8_WROOK : UTF8_BROOK); break;
-                case QUEEN:  printf(white ? UTF8_WQUEEN : UTF8_BQUEEN); break;
-                case KING:   printf(white ? UTF8_WKING : UTF8_BKING); break;
+                case WHITE | PAWN: printf(UTF8_WPAWN); break;
+                case WHITE | BISHOP: printf(UTF8_WBISHOP); break;
+                case WHITE | KNIGHT: printf(UTF8_WKNIGHT); break;
+                case WHITE | ROOK: printf(UTF8_WROOK); break;
+                case WHITE | QUEEN: printf(UTF8_WQUEEN); break;
+                case WHITE | KING: printf(UTF8_WKING); break;
+
+                case BLACK | PAWN: printf(UTF8_BPAWN); break;
+                case BLACK | BISHOP: printf(UTF8_BBISHOP); break;
+                case BLACK | KNIGHT: printf(UTF8_BKNIGHT); break;
+                case BLACK | ROOK: printf(UTF8_BROOK); break;
+                case BLACK | QUEEN: printf(UTF8_BQUEEN); break;
+                case BLACK | KING: printf(UTF8_BKING); break;
+
                 default:     printf(" "); break;
             }
 
