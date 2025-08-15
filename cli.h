@@ -15,12 +15,14 @@
 
 #define ANSI_FG_BLACK "30"
 #define ANSI_BG_GREEN "42"
+#define ANSI_BG_HIGREEN "102"
 #define ANSI_BG_YELLOW "43"
 #define ANSI_BG_WHITE "47"
 
 #define PRINT_BSQUARE       "\x1b[" ANSI_BG_YELLOW ";" ANSI_FG_BLACK "m"
 #define PRINT_WSQUARE       "\x1b[" ANSI_BG_WHITE ";" ANSI_FG_BLACK "m"
-#define PRINT_CURSORSQUARE  "\x1b[" ANSI_BG_GREEN ";" ANSI_FG_BLACK "m"
+#define PRINT_MOVESSQUARE   "\x1b[" ANSI_BG_HIGREEN ";" ANSI_FG_BLACK "m"
+#define PRINT_SELECTSQUARE  "\x1b[" ANSI_BG_GREEN ";" ANSI_FG_BLACK "m"
 #define PRINT_RESET         "\x1b[0m"
 
 void print_board(const struct board *b, const struct moveList *ml)
@@ -35,20 +37,30 @@ void print_board(const struct board *b, const struct moveList *ml)
 
         for (int file = 0; file < 8; file++) // horizontal; A-H
         {
-            bool inMoveList = false;
+            bool can_move_to = false;
+            bool selected = false;
             for (int i = 0; i < ml->n_moves; i++)
             {
+                const struct coord *movefrom = &(ml->moves[i].from);
                 const struct coord *moveto = &(ml->moves[i].to);
+
+                if (movefrom->rank == rank && movefrom->file == file)
+                {
+                    selected = true;
+                    break;
+                }
+
                 if (moveto->rank == rank && moveto->file == file)
                 {
-                    inMoveList = true;
+                    can_move_to = true;
                     break;
                 }
             }
 
             white_square = (rank + file) % 2 > 0;
 
-            if (inMoveList) { printf(PRINT_CURSORSQUARE); }
+            if (selected) { printf(PRINT_SELECTSQUARE); }
+            else if (can_move_to) { printf(PRINT_MOVESSQUARE); }
             else if (white_square) { printf(PRINT_WSQUARE); }
             else { printf(PRINT_BSQUARE); }
 

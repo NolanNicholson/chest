@@ -25,7 +25,11 @@ int main(void)
     struct moveList ml;
     ml.n_moves = 0;
 
-    select_piece("g1", &b, &ml);
+    // TODO remove debug pieces
+    set_piece(&b, (struct coord) { 4, 4 }, WHITE | QUEEN);
+    set_piece(&b, (struct coord) { 2, 3 }, BLACK | KING);
+    set_piece(&b, (struct coord) { 3, 6 }, WHITE | KING);
+    select_piece("e5", &b, &ml);
 
     print_board(&b, &ml);
 
