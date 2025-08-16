@@ -91,11 +91,26 @@ void print_board(const struct board *b, const struct moveList *ml)
 
             putc(' ', stdout);
         }
-        printf(PRINT_RESET" %d\n", rank + 1);
+        printf(PRINT_RESET" %d  ", rank + 1);
+
+        if (rank == 7)
+        {
+            printf(b->white_to_move ? "White to move" : "Black to move");
+        }
+
+        if (rank == 6)
+        {
+            printf("Castles: ");
+            int castles = b->castles_available;
+            if (castles & CASTLE_WK) { putc('K', stdout); }
+            if (castles & CASTLE_WQ) { putc('Q', stdout); }
+            if (castles & CASTLE_BK) { putc('k', stdout); }
+            if (castles & CASTLE_BQ) { putc('q', stdout); }
+        }
+
+        printf("\n");
     }
-    printf("  a b c d e f g h\n");
-    
-    printf("\n%s\n", b->white_to_move ? "White to move" : "Black to move");
+    printf("  a b c d e f g h\n\n");
 }
 
 struct coord coordstr(const char *str)
@@ -133,7 +148,7 @@ bool move_algebraic(struct board *b, const char *move, struct moveList *allLegal
 
         // 0-0 and O-O denote a kingside castle.
         // 0-0 and O-O-O denote a queenside castle.
-        case '0': case 'O':
+        case '0': case 'O': case 'o':
                   char o = move[i++];
                   if (move[i++] == '-' && move[i++] == o)
                   {

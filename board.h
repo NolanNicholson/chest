@@ -23,16 +23,23 @@
 #define WHITE       0x20
 #define PIECE_COLOR 0x30
 
-struct board
-{
-    int pieces[64];
-    bool white_to_move;
-};
+#define CASTLE_WK   0x01
+#define CASTLE_WQ   0x02
+#define CASTLE_BK   0x04
+#define CASTLE_BQ   0x08
 
 struct coord
 {
     int rank;
     int file;
+};
+
+struct board
+{
+    int pieces[64];
+    bool white_to_move;
+    int castles_available;
+    struct coord ep_target;
 };
 
 int get_piece(const struct board *b, struct coord at)
@@ -116,7 +123,13 @@ void apply_FEN(struct board *b, const char *fen)
                 break;
 
             case APPLY_FEN_STATE_CASTLING:
-                // TODO
+                switch (c)
+                {
+                    case 'K': b->castles_available |= CASTLE_WK;
+                    case 'Q': b->castles_available |= CASTLE_WQ;
+                    case 'k': b->castles_available |= CASTLE_BK;
+                    case 'q': b->castles_available |= CASTLE_BQ;
+                }
                 break;
 
             case APPLY_FEN_STATE_EN_PASSANT:
@@ -137,6 +150,8 @@ void apply_FEN(struct board *b, const char *fen)
 void init_board(struct board *b)
 {
     memset(b->pieces, 0, sizeof(b->pieces));
+    b->white_to_move = true;
+    b->castles_available = 0;
 }
 
 

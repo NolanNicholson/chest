@@ -34,8 +34,67 @@ void genPseudoLegalMovesForPiece(const struct board *b, struct coord from, struc
 void applyMove(struct board *b, struct move m)
 {
     int piece = get_piece(b, m.from);
+    int target_piece = get_piece(b, m.to);
+
     set_piece(b, m.to, piece);
     set_piece(b, m.from, NONE);
+
+    // Handle castling
+    switch (piece)
+    {
+        // Moving a king means you can no longer castle in either direction.
+        case WHITE | KING:
+            if (m.to.file - m.from.file == 2) // Move rook for kingside castle
+            {
+                set_piece(b, (struct coord) {0, 5}, WHITE | ROOK);
+                set_piece(b, (struct coord) {0, 7}, NONE);
+            }
+            else if (m.to.file - m.from.file == -2) // Move rook for queenside castle
+            {
+                set_piece(b, (struct coord) {0, 3}, WHITE | ROOK);
+                set_piece(b, (struct coord) {0, 0}, NONE);
+            }
+
+            b->castles_available &= ~(CASTLE_WK | CASTLE_WQ);
+            break;
+
+        case BLACK | KING:
+            if (m.to.file - m.from.file == 2) // Move rook for kingside castle
+            {
+                set_piece(b, (struct coord) {7, 5}, BLACK | ROOK);
+                set_piece(b, (struct coord) {7, 7}, NONE);
+            }
+            else if (m.to.file - m.from.file == -2) // Move rook for queenside castle
+            {
+                set_piece(b, (struct coord) {7, 3}, BLACK | ROOK);
+                set_piece(b, (struct coord) {7, 0}, NONE);
+            }
+
+            b->castles_available &= ~(CASTLE_BK | CASTLE_BQ);
+            break;
+
+        // Moving a rook means you can no longer castle in that rook's direction.
+        case WHITE | ROOK:
+            b->castles_available &= ~(m.from.file == 0 ? CASTLE_WQ : CASTLE_WK);
+            break;
+
+        case BLACK | ROOK:
+            b->castles_available &= ~(m.from.file == 0 ? CASTLE_BQ : CASTLE_BK);
+            break;
+    }
+
+    // Capturing a rook means the opponent can't castle on that side anymore.
+    switch (target_piece)
+    {
+        case WHITE | ROOK:
+            b->castles_available &= ~(m.to.file == 0 ? CASTLE_WQ : CASTLE_WK);
+            break;
+
+        case BLACK | ROOK:
+            b->castles_available &= ~(m.to.file == 0 ? CASTLE_BQ : CASTLE_BK);
+            break;
+    }
+
     b->white_to_move ^= 1;
 }
 
@@ -70,6 +129,10 @@ enum moveType getMoveType(const struct board *b, int piece, struct move m, struc
 
     // You can't capture a piece of your own color.
     if (friendly_color == (target_piece & PIECE_COLOR)) { return INVALID; }
+
+    // TODO: Restrictions on castling:
+    // All squares between the king and the rook must be vacant.
+    // King must not leave, cross over, or arrive at an attacked square.
 
     if ((target_piece & PIECE_COLOR) == NONE) { return FREE; }
     return CAPTURE;
@@ -117,7 +180,7 @@ void genPseudoLegalMovesForPiece(const struct board *b, struct coord from, struc
     switch (piece_type)
     {
         case KING:
-            // TODO: castling
+            // Regular moves
             tryAddMove(b, piece, from, (struct coord) { from.rank,     from.file + 1 }, list);
             tryAddMove(b, piece, from, (struct coord) { from.rank,     from.file - 1 }, list);
             tryAddMove(b, piece, from, (struct coord) { from.rank + 1, from.file + 1 }, list);
@@ -126,6 +189,10 @@ void genPseudoLegalMovesForPiece(const struct board *b, struct coord from, struc
             tryAddMove(b, piece, from, (struct coord) { from.rank - 1, from.file + 1 }, list);
             tryAddMove(b, piece, from, (struct coord) { from.rank - 1, from.file     }, list);
             tryAddMove(b, piece, from, (struct coord) { from.rank - 1, from.file - 1 }, list);
+
+            // Castling moves
+            tryAddMove(b, piece, from, (struct coord) { from.rank,     from.file + 2 }, list);
+            tryAddMove(b, piece, from, (struct coord) { from.rank,     from.file - 2 }, list);
 
             return;
 
