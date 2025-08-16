@@ -181,7 +181,7 @@ bool move_algebraic(struct board *b, const char *move, struct moveList *allLegal
     int rank = rank_c - '1';
 
     int i_match;
-    int n_matching_moves;
+    int n_matching_moves = 0;
     for (int i_move = 0; i_move < allLegalMoves->n_moves; i_move++)
     {
         struct move *m = &(allLegalMoves->moves[i_move]);
