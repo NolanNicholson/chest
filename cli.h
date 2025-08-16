@@ -32,7 +32,7 @@ void print_board(const struct board *b, const struct moveList *ml)
 {
     bool white_square;
 
-    printf("  a b c d e f g h\n");
+    printf("\n  a b c d e f g h\n");
 
     for (int rank = 7; rank >= 0; rank--)
     {
@@ -174,8 +174,6 @@ bool move_algebraic(struct board *b, const char *move, struct moveList *allLegal
         rank_c = move[i++];
     }
 
-    printf("Move: 0x%x to %c%c\n", ptype, file_c, rank_c);
-
     int piece = (white ? WHITE : BLACK) | ptype;
     int file = file_c - 'a';
     int rank = rank_c - '1';
@@ -202,6 +200,28 @@ bool move_algebraic(struct board *b, const char *move, struct moveList *allLegal
 
     applyMove(b, allLegalMoves->moves[i_match]);
     return true;
+}
+
+const char *getPieceTypeStr(int piece)
+{
+    switch(piece & PIECE_TYPE)
+    {
+        case PAWN: return "Pawn";
+        case ROOK: return "Rook";
+        case KNIGHT: return "Knight";
+        case BISHOP: return "Bishop";
+        case QUEEN: return "Queen";
+        case KING: return "King";
+    }
+}
+
+void printMove(struct board *b, struct move m)
+{
+    int piece = get_piece(b, m.from);
+    const char *owner = ((piece & PIECE_COLOR) == WHITE) ? "White" : "Black";
+    const char *type = getPieceTypeStr(piece);
+
+    printf("%s's move: %s to %c%c\n", owner, type, m.to.file + 'a', m.to.rank + '1');
 }
 
 #endif // CLI_H

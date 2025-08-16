@@ -1,6 +1,7 @@
 #include "board.h"
 #include "moves.h"
 #include "cli.h"
+#include "ai.h"
 
 bool select_piece(const char *coord_str, struct board *b, struct moveList *ml)
 {
@@ -21,6 +22,7 @@ int main(void)
 {
     struct board b;
     init_board(&b);
+    initComputer();
 
     // default position
     apply_FEN(&b, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
@@ -30,32 +32,48 @@ int main(void)
     {
         print_board(&b, NULL);
 
-        char cmd[64];
-
         struct moveList ml;
         init_movelist(&ml);
         genAllMoves(&b, &ml);
 
-        // Prompt loop
-        while (true)
+        if (ml.n_moves == 0)
         {
-            scanf("%s", cmd);
+            printf("Checkmate! %s wins!\n", b.white_to_move ? "Black" : "White");
+            return 0;
+        }
 
-            if (strcmp(cmd, "q") == 0)
+        char cmd[64];
+
+        // White is human (TODO: make this adjustable)
+        if (b.white_to_move)
+        {
+            // Prompt loop
+            while (true)
             {
-                return 0;
-            }
+                printf("Enter command: ");
+                scanf("%s", cmd);
 
-            if (move_algebraic(&b, cmd, &ml))
-            {
-                break;
-            }
+                if (strcmp(cmd, "q") == 0)
+                {
+                    return 0;
+                }
 
-            printf("Invalid input. Enter a legal move in algebraic notation, or enter 'q' to quit.\n");
+                if (move_algebraic(&b, cmd, &ml))
+                {
+                    break;
+                }
+
+                printf("Invalid input. Enter a legal move in algebraic notation, or enter 'q' to quit.\n");
+            }
+        }
+        // Black is computer (TODO: make this adjustable)
+        else
+        {
+            struct move m = getComputerMove(&b, &ml);
+            printMove(&b, m);
+            applyMove(&b, m);
         }
     }
-
-    //select_piece("e5", &b, &ml);
 
     return 0;
 }
