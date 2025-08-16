@@ -124,6 +124,7 @@ enum moveType getMoveType(const struct board *b, int piece, struct move m, struc
     if (to.file < 0 || to.file > 7) { return INVALID; }
 
     int friendly_color = piece & PIECE_COLOR;
+    bool white = (friendly_color & WHITE) > 0;
 
     // You can't move nothing.
     if (friendly_color == NONE) { return INVALID; }
@@ -137,15 +138,23 @@ enum moveType getMoveType(const struct board *b, int piece, struct move m, struc
     {
         struct coord inbetween = { .rank = m.from.rank };
 
+        // Kingside castle
         if (m.to.file - m.from.file == 2)
         {
+            int avail_flag = white ? CASTLE_WK : CASTLE_BK;
+            if (!(b->castles_available & avail_flag)) { return INVALID; }
+
             for (inbetween.file = m.from.file + 1; inbetween.file < 7; inbetween.file++)
             {
                 if (get_piece(b, inbetween) != NONE) { return INVALID; }
             }
         }
+        // Queenside castle
         else if (m.to.file - m.from.file == -2)
         {
+            int avail_flag = white ? CASTLE_WQ : CASTLE_BQ;
+            if (!(b->castles_available & avail_flag)) { return INVALID; }
+
             for (inbetween.file = m.from.file - 1; inbetween.file > 0; inbetween.file--)
             {
                 if (get_piece(b, inbetween) != NONE) { return INVALID; }

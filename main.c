@@ -29,6 +29,7 @@ int main(void)
 
     // castle testing position
     apply_FEN(&b, "2r1k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1");
+    //apply_FEN(&b, "R7/4k/6K/8/8/8/8/5r w - - 0 1");
 
     // Main game loop
     while (true)
@@ -41,6 +42,9 @@ int main(void)
 
         if (ml.n_moves == 0)
         {
+            // TODO: No legal moves means stalemate, not checkmate,
+            // if the king is not currently in check.
+            // For example: "k7/1R6/2K5/8/8/8/8/8 b - - 0 1"
             printf("Checkmate! %s wins!\n", b.white_to_move ? "Black" : "White");
             return 0;
         }

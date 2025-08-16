@@ -205,6 +205,8 @@ bool move_algebraic(struct board *b, const char *move, struct moveList *allLegal
         n_matching_moves++;
     }
 
+    // TODO: Support disambiguating by file and/or rank (prefer file)
+    // TODO: Support promotions
     if (n_matching_moves != 1)
     {
         fprintf(stderr, "%d moves match string %s (1 expected)\n", n_matching_moves, move);
