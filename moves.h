@@ -91,6 +91,20 @@ enum moveType tryAddMove(const struct board *b, int piece, struct coord from, st
     return mt;
 }
 
+enum moveType tryAddMoveRestricted(const struct board *b, int piece, struct coord from, struct coord to, struct moveList *list, enum moveType requiredType)
+{
+    struct move m = {.from = from, .to = to};
+    enum moveType mt = getMoveType(b, piece, m, list);
+
+    if (mt != requiredType) { return mt; }
+
+    addMove(list, (struct move) {
+            .from = from,
+            .to = to,
+            .isCapture = (mt == CAPTURE)
+            });
+}
+
 void genPseudoLegalMovesForPiece(const struct board *b, struct coord from, struct moveList *list)
 {
     int piece = get_piece(b, from);
@@ -128,15 +142,26 @@ void genPseudoLegalMovesForPiece(const struct board *b, struct coord from, struc
             return;
 
         case PAWN:
-            // TODO: ordinary captures
             // TODO: en passant
-            int dir = (piece_color == WHITE) ? 1 : -1;
-            int startRank = (piece_color == WHITE) ? 1 : 6;
-            tryAddMove(b, piece, from, (struct coord) { from.rank + dir, from.file }, list);
+            // TODO: promotions
+            bool white = piece_color == WHITE;
+            int startRank = white ? 1 : 6;
+            int dir = white ? 1 : -1;
+            int singlePushRank = from.rank + dir;
+            int doublePushRank = singlePushRank + dir;
+
+            // Straight forward single pushes cannot be captures
+            tryAddMoveRestricted(b, piece, from, (struct coord) { singlePushRank, from.file }, list, FREE);
+
+            // Diagonal forward pushes must be captures
+            tryAddMoveRestricted(b, piece, from, (struct coord) { singlePushRank, from.file-1 }, list, CAPTURE);
+            tryAddMoveRestricted(b, piece, from, (struct coord) { singlePushRank, from.file+1 }, list, CAPTURE);
+
             if (from.rank == startRank)
             {
-                tryAddMove(b, piece, from, (struct coord) { from.rank + 2*dir, from.file }, list);
+                tryAddMoveRestricted(b, piece, from, (struct coord) { doublePushRank, from.file }, list, FREE);
             }
+
             return;
 
         case ROOK:
