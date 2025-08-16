@@ -16,17 +16,15 @@
 #define UTF8_BKNIGHT    "\u265E"
 #define UTF8_BPAWN      "\u265F"
 
-#define ANSI_FG_BLACK "30"
+#define ANSI_FG_BLACK "30;2"
 #define ANSI_BG_GREEN "42"
 #define ANSI_BG_HIGREEN "102"
-#define ANSI_BG_YELLOW "43"
-#define ANSI_BG_WHITE "47"
 
-#define PRINT_BSQUARE       "\x1b[" ANSI_BG_YELLOW ";" ANSI_FG_BLACK "m"
-#define PRINT_WSQUARE       "\x1b[" ANSI_BG_WHITE ";" ANSI_FG_BLACK "m"
-#define PRINT_MOVESSQUARE   "\x1b[" ANSI_BG_HIGREEN ";" ANSI_FG_BLACK "m"
-#define PRINT_SELECTSQUARE  "\x1b[" ANSI_BG_GREEN ";" ANSI_FG_BLACK "m"
-#define PRINT_RESET         "\x1b[0m"
+#define PRINT_BSQUARE       "\e[48;2;210;140;69;" ANSI_FG_BLACK "m"
+#define PRINT_WSQUARE       "\e[48;2;255;207;159;" ANSI_FG_BLACK "m"
+#define PRINT_MOVESSQUARE   "\e[" ANSI_BG_HIGREEN ";" ANSI_FG_BLACK "m"
+#define PRINT_SELECTSQUARE  "\e[" ANSI_BG_GREEN ";" ANSI_FG_BLACK "m"
+#define PRINT_RESET         "\e[0m"
 
 void print_board(const struct board *b, const struct moveList *ml)
 {
