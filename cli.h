@@ -1,3 +1,6 @@
+#ifndef CLI_H
+#define CLI_H
+
 #include "board.h"
 
 #define UTF8_WKING      "\u2654"
@@ -39,21 +42,24 @@ void print_board(const struct board *b, const struct moveList *ml)
         {
             bool can_move_to = false;
             bool selected = false;
-            for (int i = 0; i < ml->n_moves; i++)
+            if (ml)
             {
-                const struct coord *movefrom = &(ml->moves[i].from);
-                const struct coord *moveto = &(ml->moves[i].to);
-
-                if (movefrom->rank == rank && movefrom->file == file)
+                for (int i = 0; i < ml->n_moves; i++)
                 {
-                    selected = true;
-                    break;
-                }
+                    const struct coord *movefrom = &(ml->moves[i].from);
+                    const struct coord *moveto = &(ml->moves[i].to);
 
-                if (moveto->rank == rank && moveto->file == file)
-                {
-                    can_move_to = true;
-                    break;
+                    if (movefrom->rank == rank && movefrom->file == file)
+                    {
+                        selected = true;
+                        break;
+                    }
+
+                    if (moveto->rank == rank && moveto->file == file)
+                    {
+                        can_move_to = true;
+                        break;
+                    }
                 }
             }
 
@@ -93,3 +99,109 @@ void print_board(const struct board *b, const struct moveList *ml)
     
     printf("\n%s\n", b->white_to_move ? "White to move" : "Black to move");
 }
+
+struct coord coordstr(const char *str)
+{
+    struct coord output = {
+        .file = str[0] - 'a',
+        .rank = str[1] - '1'
+    };
+    return output;
+}
+
+bool move_algebraic(struct board *b, const char *move, struct moveList *allLegalMoves)
+{
+    int i = 0; // index into the move string
+    int ptype;
+
+    bool white = b->white_to_move;
+    bool is_castle = false;
+    bool is_queenside_castle = false;
+    bool recognized = true;
+
+    switch (move[i])
+    {
+        // For non-pawns, the first letter denotes the piece type
+        case 'K': i++; ptype = KING; break;
+        case 'Q': i++; ptype = QUEEN; break;
+        case 'R': i++; ptype = ROOK; break;
+        case 'B': i++; ptype = BISHOP; break;
+        case 'N': i++; ptype = KNIGHT; break;
+
+        // Pawn movements start directly with a rank letter.
+        case 'a': case 'b': case 'c': case 'd':
+        case 'e': case 'f': case 'g': case 'h':
+                  ptype = PAWN; break;
+
+        // 0-0 and O-O denote a kingside castle.
+        // 0-0 and O-O-O denote a queenside castle.
+        case '0': case 'O':
+                  char o = move[i++];
+                  if (move[i++] == '-' && move[i++] == o)
+                  {
+                      // castling!
+                      is_castle = true;
+
+                      if (move[i++] == '-' && move[i++] == o)
+                      {
+                          is_queenside_castle = true;
+                      }
+
+                      ptype = KING;
+                      break;
+                  }
+                  else
+                  {
+                      fprintf(stderr, "Unnrecognized castling attempt? %s\n", move);
+                      return false;
+                  }
+
+        default:
+                  fprintf(stderr, "Unrecognized move: %s\n", move);
+                  return false;
+    }
+
+    char rank_c, file_c;
+
+    if (is_castle)
+    {
+        file_c = is_queenside_castle ? 'b' : 'g';
+        rank_c = white ? '1' : '8';
+    }
+    else
+    {
+        file_c = move[i++];
+        rank_c = move[i++];
+    }
+
+    printf("Move: 0x%x to %c%c\n", ptype, file_c, rank_c);
+
+    int piece = (white ? WHITE : BLACK) | ptype;
+    int file = file_c - 'a';
+    int rank = rank_c - '1';
+
+    int i_match;
+    int n_matching_moves;
+    for (int i_move = 0; i_move < allLegalMoves->n_moves; i_move++)
+    {
+        struct move *m = &(allLegalMoves->moves[i_move]);
+
+        if (m->to.rank != rank) { continue; }
+        if (m->to.file != file) { continue; }
+        if (get_piece(b, m->from) != piece) { continue; }
+
+        i_match = i_move;
+        n_matching_moves++;
+    }
+
+    if (n_matching_moves != 1)
+    {
+        fprintf(stderr, "%d moves match string %s (1 expected)\n", n_matching_moves, move);
+        return false;
+    }
+
+    applyMove(b, allLegalMoves->moves[i_match]);
+    return true;
+}
+
+#endif // CLI_H

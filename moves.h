@@ -25,8 +25,8 @@ void init_movelist(struct moveList *list)
     list->n_moves = 0;
 }
 
-void genAllPseudoLegalMoves(struct board *b, int piece_color, struct moveList *list);
-void genAllMoves(struct board *b, int piece_color, struct moveList *list);
+void genAllPseudoLegalMoves(struct board *b, struct moveList *list);
+void genAllMoves(struct board *b, struct moveList *list);
 void genMovesForPiece(const struct board *b, struct coord from, struct moveList *list);
 void genPseudoLegalMovesForPiece(const struct board *b, struct coord from, struct moveList *list);
 
@@ -36,6 +36,7 @@ void applyMove(struct board *b, struct move m)
     int piece = get_piece(b, m.from);
     set_piece(b, m.to, piece);
     set_piece(b, m.from, NONE);
+    b->white_to_move ^= 1;
 }
 
 void initMoveList(struct moveList *list)
@@ -236,7 +237,7 @@ void genMovesForPiece(const struct board *b, struct coord from, struct moveList 
         struct moveList list_opponent;
         init_movelist(&list_opponent);
 
-        genAllPseudoLegalMoves(&b2, enemy_color, &list_opponent);
+        genAllPseudoLegalMoves(&b2, &list_opponent);
         for (int i_response = 0; i_response < list_opponent.n_moves; i_response++)
         {
             struct coord to = list_opponent.moves[i_response].to;
@@ -254,8 +255,10 @@ void genMovesForPiece(const struct board *b, struct coord from, struct moveList 
     }
 }
 
-void genAllPseudoLegalMoves(struct board *b, int piece_color, struct moveList *list)
+void genAllPseudoLegalMoves(struct board *b, struct moveList *list)
 {
+    int piece_color = b->white_to_move ? WHITE : BLACK;
+
     for (int rank = 0; rank < 8; rank++)
     {
         for (int file = 0; file < 8; file++)
@@ -269,8 +272,9 @@ void genAllPseudoLegalMoves(struct board *b, int piece_color, struct moveList *l
     }
 }
 
-void genAllMoves(struct board *b, int piece_color, struct moveList *list)
+void genAllMoves(struct board *b, struct moveList *list)
 {
+    int piece_color = b->white_to_move ? WHITE : BLACK;
     int pieces_examined = 0;
 
     for (int rank = 0; rank < 8; rank++)

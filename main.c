@@ -25,14 +25,37 @@ int main(void)
     // default position
     apply_FEN(&b, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-    struct moveList ml;
-    init_movelist(&ml);
+    // Main game loop
+    while (true)
+    {
+        print_board(&b, NULL);
 
-    genAllMoves(&b, WHITE, &ml);
+        char cmd[64];
+
+        struct moveList ml;
+        init_movelist(&ml);
+        genAllMoves(&b, &ml);
+
+        // Prompt loop
+        while (true)
+        {
+            scanf("%s", cmd);
+
+            if (strcmp(cmd, "q") == 0)
+            {
+                return 0;
+            }
+
+            if (move_algebraic(&b, cmd, &ml))
+            {
+                break;
+            }
+
+            printf("Invalid input. Enter a legal move in algebraic notation, or enter 'q' to quit.\n");
+        }
+    }
 
     //select_piece("e5", &b, &ml);
-
-    print_board(&b, &ml);
 
     return 0;
 }

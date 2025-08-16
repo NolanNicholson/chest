@@ -45,72 +45,6 @@ void set_piece(struct board *b, struct coord at, int piece)
     b->pieces[at.rank*8 + at.file] = piece;
 }
 
-bool move_piece(struct board *b, struct coord from, struct coord to)
-{
-    int i_from = from.rank * 8 + from.file;
-    int piece = b->pieces[i_from];
-
-    // You can't move nothing.
-    if (piece & PIECE_COLOR == NONE || piece & PIECE_TYPE == NONE)
-    {
-        return false;
-    }
-
-    // A piece cannot move into another piece of the same color.
-    int dest_piece = get_piece(b, to);
-    if (piece & PIECE_COLOR == dest_piece & PIECE_COLOR)
-    {
-        return false;
-    }
-
-    switch (piece & PIECE_TYPE)
-    {
-        case KNIGHT:
-            int diff_rank = abs(from.rank - to.rank);
-            int diff_file = abs(from.file - to.file);
-            if (!((diff_rank == 1 && diff_file == 2) || (diff_rank == 2 && diff_file == 1)))
-            {
-                return false;
-            }
-
-            break;
-
-        case ROOK:
-            if (from.rank == to.rank)
-            {
-                for (int file = MIN(from.file, to.file); file < MAX(from.file, to.file); file++)
-                {
-                    if (get_piece(b, (struct coord){to.rank, file}) & PIECE_COLOR != NONE)
-                    {
-                        return false;
-                    }
-                }
-            }
-            else if (from.file == to.file)
-            {
-                for (int rank = MIN(from.rank, to.rank); rank < MAX(from.rank, to.rank); rank++)
-                {
-                    if (get_piece(b, (struct coord){rank, to.file}) & PIECE_COLOR != NONE)
-                    {
-                        return false;
-                    }
-                }
-            }
-            else
-            {
-                return false;
-            }
-
-            break;
-    }
-
-    // Commit the move.
-    b->pieces[i_from] = NONE;
-    set_piece(b, to, piece);
-
-    return true;
-}
-
 void apply_FEN(struct board *b, const char *fen)
 {
     // piece placement
@@ -205,66 +139,6 @@ void init_board(struct board *b)
     memset(b->pieces, 0, sizeof(b->pieces));
 }
 
-void move_algebraic(struct board *b, const char *move)
-{
-    int i = 0; // index into the move string
-    int ptype;
-
-    bool is_kingside_castle = false;
-    bool is_queenside_castle = false;
-
-    switch (move[i])
-    {
-        // For non-pawns, the first letter denotes the piece type
-        case 'K': i++; ptype = KING; break;
-        case 'Q': i++; ptype = QUEEN; break;
-        case 'R': i++; ptype = ROOK; break;
-        case 'B': i++; ptype = BISHOP; break;
-        case 'N': i++; ptype = KNIGHT; break;
-
-        // Pawn movements start directly with a rank letter.
-        case 'a': case 'b': case 'c': case 'd':
-        case 'e': case 'f': case 'g': case 'h':
-                  ptype = PAWN; break;
-
-        // 0-0 and O-O denote a kingside castle.
-        // 0-0 and O-O-O denote a queenside castle.
-        case '0': case 'O':
-                  char o = move[i++];
-                  if (move[i++] == '-' && move[i++] == o)
-                  {
-                      // castling!
-                      if (move[i++] == '-' && move[i++] == o)
-                      {
-                          is_queenside_castle = true;
-                      }
-                      else
-                      {
-                          is_kingside_castle = true;
-                      }
-                      break;
-                  }
-                  else
-                  {
-                      goto unrecognized_algebraic_move;
-                  }
-
-        default:
-unrecognized_algebraic_move:
-                  fprintf(stderr, "Unrecognized move: %s\n", move);
-                  return;
-    }
-
-    char file_c = move[i++];
-    char rank_c = move[i++];
-
-    printf("Moving piece 0x%x to %c%c\n", ptype, file_c, rank_c);
-
-    int file = file_c - 'a';
-    int rank = rank_c - '1';
-
-    move_piece(b, (struct coord){0, 6}, (struct coord){rank, file});
-}
 
 
 #endif //BOARD_H
