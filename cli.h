@@ -87,8 +87,9 @@ void print_board(const struct board *b, const struct moveList *ml)
 
             putc(' ', stdout);
         }
-        printf(PRINT_RESET"\n");
+        printf(PRINT_RESET" %d\n", rank + 1);
     }
+    printf("  a b c d e f g h\n");
     
     printf("\n%s\n", b->white_to_move ? "White to move" : "Black to move");
 }

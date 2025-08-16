@@ -203,7 +203,6 @@ void apply_FEN(struct board *b, const char *fen)
 void init_board(struct board *b)
 {
     memset(b->pieces, 0, sizeof(b->pieces));
-    apply_FEN(b, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 }
 
 void move_algebraic(struct board *b, const char *move)
