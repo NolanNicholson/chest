@@ -133,15 +133,15 @@ void apply_FEN(struct board *b, const char *fen)
                 break;
 
             case APPLY_FEN_STATE_EN_PASSANT:
-                // TODO
+                // TODO: Apply FEN en-passant info
                 break;
 
             case APPLY_FEN_STATE_HALFMOVE:
-                // TODO
+                // TODO: Apply FEN half-move info
                 break;
 
             case APPLY_FEN_STATE_FULLMOVE:
-                // TODO
+                // TODO: Apply FEN full-move info
                 break;
         }
     }

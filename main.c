@@ -25,11 +25,7 @@ int main(void)
     initComputer();
 
     // default position
-    //apply_FEN(&b, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-
-    // castle testing position
-    apply_FEN(&b, "2r1k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1");
-    //apply_FEN(&b, "R7/4k/6K/8/8/8/8/5r w - - 0 1");
+    apply_FEN(&b, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
     // Main game loop
     while (true)
