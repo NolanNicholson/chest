@@ -37,11 +37,13 @@ void applyMove(struct board *b, struct move m)
 {
     int piece = get_piece(b, m.from);
     int target_piece = get_piece(b, m.to);
+    bool is_ep_capture = (b->ep_target.rank == m.to.rank && b->ep_target.file == m.to.file);
 
     set_piece(b, m.from, NONE);
     set_piece(b, m.to, piece);
+    b->ep_target.file = m.to.file;
+    b->ep_target.rank = -1;
 
-    // Handle castling
     switch (piece)
     {
         // Moving a king means you can no longer castle in either direction.
@@ -82,6 +84,32 @@ void applyMove(struct board *b, struct move m)
 
         case BLACK | ROOK:
             b->castles_available &= ~(m.from.file == 0 ? CASTLE_BQ : CASTLE_BK);
+            break;
+
+        case WHITE | PAWN:
+            // Apply en-passant capture
+            if (is_ep_capture)
+            {
+                set_piece(b, (struct coord) { 4, m.to.file }, NONE);
+            }
+            // Set up future en-passant flag
+            if (m.from.rank == 1 && m.to.rank == 3)
+            {
+                b->ep_target.rank = 2;
+            }
+            break;
+
+        case BLACK | PAWN:
+            // Apply en-passant capture
+            if (is_ep_capture)
+            {
+                set_piece(b, (struct coord) { 3, m.to.file }, NONE);
+            }
+            // Set up future en-passant flag
+            if (m.from.rank == 6 && m.to.rank == 4)
+            {
+                b->ep_target.rank = 5;
+            }
             break;
     }
 
@@ -134,32 +162,45 @@ enum moveType getMoveType(const struct board *b, int piece, struct move m, struc
     if (friendly_color == (target_piece & PIECE_COLOR)) { return INVALID; }
 
     // All squares between the king and the rook must be vacant.
-    if ((piece & PIECE_TYPE) == KING)
+    int piece_type = piece & PIECE_TYPE;
+    switch (piece_type)
     {
-        struct coord inbetween = { .rank = m.from.rank };
+        case KING:
+            struct coord inbetween = { .rank = m.from.rank };
 
-        // Kingside castle
-        if (m.to.file - m.from.file == 2)
-        {
-            int avail_flag = white ? CASTLE_WK : CASTLE_BK;
-            if (!(b->castles_available & avail_flag)) { return INVALID; }
-
-            for (inbetween.file = m.from.file + 1; inbetween.file < 7; inbetween.file++)
+            // Kingside castle
+            if (m.to.file - m.from.file == 2)
             {
-                if (get_piece(b, inbetween) != NONE) { return INVALID; }
-            }
-        }
-        // Queenside castle
-        else if (m.to.file - m.from.file == -2)
-        {
-            int avail_flag = white ? CASTLE_WQ : CASTLE_BQ;
-            if (!(b->castles_available & avail_flag)) { return INVALID; }
+                int avail_flag = white ? CASTLE_WK : CASTLE_BK;
+                if (!(b->castles_available & avail_flag)) { return INVALID; }
 
-            for (inbetween.file = m.from.file - 1; inbetween.file > 0; inbetween.file--)
-            {
-                if (get_piece(b, inbetween) != NONE) { return INVALID; }
+                for (inbetween.file = m.from.file + 1; inbetween.file < 7; inbetween.file++)
+                {
+                    if (get_piece(b, inbetween) != NONE) { return INVALID; }
+                }
             }
-        }
+            // Queenside castle
+            else if (m.to.file - m.from.file == -2)
+            {
+                int avail_flag = white ? CASTLE_WQ : CASTLE_BQ;
+                if (!(b->castles_available & avail_flag)) { return INVALID; }
+
+                for (inbetween.file = m.from.file - 1; inbetween.file > 0; inbetween.file--)
+                {
+                    if (get_piece(b, inbetween) != NONE) { return INVALID; }
+                }
+            }
+
+            break;
+
+        case PAWN:
+            // En passant is a valid capture even though the target square contains no piece
+            if (m.to.rank == b->ep_target.rank && m.to.file == b->ep_target.file)
+            {
+                return CAPTURE;
+            }
+
+            break;
     }
 
     if ((target_piece & PIECE_COLOR) == NONE) { return FREE; }

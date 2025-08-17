@@ -93,19 +93,38 @@ void print_board(const struct board *b, const struct moveList *ml)
         }
         printf(PRINT_RESET" %d  ", rank + 1);
 
-        if (rank == 7)
+        switch (rank)
         {
-            printf(b->white_to_move ? "White to move" : "Black to move");
-        }
+            case 7:
+                printf(b->white_to_move ? "White to move" : "Black to move");
+                break;
 
-        if (rank == 6)
-        {
-            printf("Castles: ");
-            int castles = b->castles_available;
-            if (castles & CASTLE_WK) { putc('K', stdout); }
-            if (castles & CASTLE_WQ) { putc('Q', stdout); }
-            if (castles & CASTLE_BK) { putc('k', stdout); }
-            if (castles & CASTLE_BQ) { putc('q', stdout); }
+            case 6:
+                printf("Castles: ");
+                int castles = b->castles_available;
+                if (castles)
+                {
+                    if (castles & CASTLE_WK) { putc('K', stdout); }
+                    if (castles & CASTLE_WQ) { putc('Q', stdout); }
+                    if (castles & CASTLE_BK) { putc('k', stdout); }
+                    if (castles & CASTLE_BQ) { putc('q', stdout); }
+                }
+                else
+                {
+                    putc('-', stdout);
+                }
+                break;
+
+            case 5:
+                printf("En passant target: ");
+                if (b->ep_target.rank >= 0 && b->ep_target.file >= 0)
+                {
+                    printf("%c%c", b->ep_target.file + 'a', b->ep_target.rank + '1');
+                }
+                else
+                {
+                    putc('-', stdout);
+                }
         }
 
         printf("\n");

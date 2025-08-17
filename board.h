@@ -133,7 +133,14 @@ void apply_FEN(struct board *b, const char *fen)
                 break;
 
             case APPLY_FEN_STATE_EN_PASSANT:
-                // TODO: Apply FEN en-passant info
+                if (c >= '1' && c <= '8')
+                {
+                    b->ep_target.rank = c - '1';
+                }
+                else if (c >= 'a' && c <= 'h')
+                {
+                    b->ep_target.file = c - 'a';
+                }
                 break;
 
             case APPLY_FEN_STATE_HALFMOVE:
@@ -152,6 +159,8 @@ void init_board(struct board *b)
     memset(b->pieces, 0, sizeof(b->pieces));
     b->white_to_move = true;
     b->castles_available = 0;
+    b->ep_target.rank = -1;
+    b->ep_target.file = -1;
 }
 
 
