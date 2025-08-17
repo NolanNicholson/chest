@@ -28,7 +28,7 @@ int main(void)
     //apply_FEN(&b, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
     // en-passant+promotion test
-    apply_FEN(&b, "8/1p/8/pP/P/8/8/8 w - a6 0 1");
+    apply_FEN(&b, "8/1p1P/8/8/8/8/8/8 w - a6 0 1");
 
     // Main game loop
     while (true)

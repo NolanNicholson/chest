@@ -7,6 +7,7 @@ struct move
 {
     struct coord from;
     struct coord to;
+    int promotion;
     bool isCapture;
 };
 
@@ -125,6 +126,11 @@ void applyMove(struct board *b, struct move m)
             break;
     }
 
+    if (m.promotion != NONE)
+    {
+        set_piece(b, m.to, (piece & PIECE_COLOR) | m.promotion);
+    }
+
     b->white_to_move ^= 1;
 }
 
@@ -207,34 +213,56 @@ enum moveType getMoveType(const struct board *b, int piece, struct move m, struc
     return CAPTURE;
 }
 
+/*
+ * Add a move - unless it's a pawn promotion, in which case add all the possible promotions.
+ */
+void addMoveMaybePawnPromo(int piece, struct moveList *list, struct move m)
+{
+    bool white = (piece & PIECE_COLOR) == WHITE;
+
+    if ((piece & PIECE_TYPE) == PAWN && m.promotion == NONE && m.to.rank == (white ? 7 : 0))
+    {
+        m.promotion = QUEEN;
+        addMove(list, m);
+        m.promotion = BISHOP;
+        addMove(list, m);
+        m.promotion = KNIGHT;
+        addMove(list, m);
+        m.promotion = ROOK;
+        addMove(list, m);
+    }
+    else
+    {
+        addMove(list, m);
+    }
+}
+
 enum moveType tryAddMove(const struct board *b, int piece, struct coord from, struct coord to, struct moveList *list)
 {
-    struct move m = {.from = from, .to = to};
+    struct move m = {.from = from, .to = to, .promotion = NONE};
     enum moveType mt = getMoveType(b, piece, m, list);
+    m.isCapture = (mt == CAPTURE);
 
-    if (mt == INVALID) { return mt; }
-
-    addMove(list, (struct move) {
-            .from = from,
-            .to = to,
-            .isCapture = (mt == CAPTURE)
-            });
+    if (mt != INVALID)
+    {
+        addMoveMaybePawnPromo(piece, list, m);
+    }
 
     return mt;
 }
 
 enum moveType tryAddMoveRestricted(const struct board *b, int piece, struct coord from, struct coord to, struct moveList *list, enum moveType requiredType)
 {
-    struct move m = {.from = from, .to = to};
+    struct move m = {.from = from, .to = to, .promotion = NONE};
     enum moveType mt = getMoveType(b, piece, m, list);
+    m.isCapture = (mt == CAPTURE);
 
-    if (mt != requiredType) { return mt; }
+    if (mt == requiredType)
+    {
+        addMoveMaybePawnPromo(piece, list, m);
+    }
 
-    addMove(list, (struct move) {
-            .from = from,
-            .to = to,
-            .isCapture = (mt == CAPTURE)
-            });
+    return mt;
 }
 
 void genPseudoLegalMovesForPiece(const struct board *b, struct coord from, struct moveList *list)
@@ -278,8 +306,6 @@ void genPseudoLegalMovesForPiece(const struct board *b, struct coord from, struc
             return;
 
         case PAWN:
-            // TODO: en passant
-            // TODO: promotions
             bool white = piece_color == WHITE;
             int startRank = white ? 1 : 6;
             int dir = white ? 1 : -1;

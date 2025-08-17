@@ -206,6 +206,26 @@ bool move_algebraic(struct board *b, const char *move, struct moveList *allLegal
         rank_c = move[i++];
     }
 
+    int promotion = NONE;
+    switch(move[i])
+    {
+        case 'Q':
+            promotion = QUEEN;
+            break;
+
+        case 'B':
+            promotion = BISHOP;
+            break;
+
+        case 'N':
+            promotion = KNIGHT;
+            break;
+
+        case 'R':
+            promotion = ROOK;
+            break;
+    }
+
     int piece = (white ? WHITE : BLACK) | ptype;
     int file = file_c - 'a';
     int rank = rank_c - '1';
@@ -218,6 +238,7 @@ bool move_algebraic(struct board *b, const char *move, struct moveList *allLegal
 
         if (m->to.rank != rank) { continue; }
         if (m->to.file != file) { continue; }
+        if (m->promotion != promotion) { continue; }
         if (get_piece(b, m->from) != piece) { continue; }
 
         i_match = i_move;
@@ -225,7 +246,6 @@ bool move_algebraic(struct board *b, const char *move, struct moveList *allLegal
     }
 
     // TODO: Support disambiguating by file and/or rank (prefer file)
-    // TODO: Support promotions
     if (n_matching_moves != 1)
     {
         fprintf(stderr, "%d moves match string %s (1 expected)\n", n_matching_moves, move);
