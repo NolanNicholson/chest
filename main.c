@@ -72,6 +72,7 @@ int main(void)
         // Black is computer (TODO: make this adjustable)
         else
         {
+            printf("Black is thinking...\n");
             struct move m = getComputerMove(&b, &ml);
             printMove(&b, m);
             applyMove(&b, m);

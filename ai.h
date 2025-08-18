@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "board.h"
 #include "moves.h"
@@ -57,6 +58,8 @@ int evaluate(struct board *b, int color)
 
 struct move getComputerMove(const struct board *b, struct moveList *ml)
 {
+    sleep(2);
+
     int best_score = INT_MIN;
     int best_index = -1;
 
@@ -97,7 +100,6 @@ struct move getComputerMove(const struct board *b, struct moveList *ml)
         }
     }
 
-    printf("Selected: %d\n", best_index);
     return ml->moves[best_index];
 }
 
