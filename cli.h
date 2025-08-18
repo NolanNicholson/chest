@@ -193,59 +193,105 @@ bool move_algebraic(struct board *b, const char *move, struct moveList *allLegal
                   return false;
     }
 
-    char rank_c, file_c;
+    int rank_to = -1;
+    int file_to = -1;
+    int rank_from = -1;
+    int file_from = -1;
+    int promotion = NONE;
 
     if (is_castle)
     {
-        file_c = is_queenside_castle ? 'b' : 'g';
-        rank_c = white ? '1' : '8';
+        file_to = is_queenside_castle ? 2 : 6;
+        rank_to = white ? 0 : 7;
     }
     else
     {
-        file_c = move[i++];
-        rank_c = move[i++];
-    }
+        /*
+         * To disambiguate positions, the file and/or rank of departure
+         * might be given before the file and rank of the destination.
+         * Examples:
+         * Rdf8: move the "d" rook to f8
+         * Qh4e1: move queen from h4 to e1
+         */
+        while (true)
+        {
+            char c = move[i++];
 
-    int promotion = NONE;
-    switch(move[i])
-    {
-        case 'Q':
-            promotion = QUEEN;
-            break;
+            // 1 through 8: rank
+            if (c >= '1' && c <= '8')
+            {
+                rank_from = rank_to;
+                rank_to = c - '1';
+            }
+            // a through h: file
+            else if (c >= 'a' && c <= 'h')
+            {
+                file_from = file_to;
+                file_to = c - 'a';
+            }
+            else
+            {
+                bool got_unrecognized = false;
 
-        case 'B':
-            promotion = BISHOP;
-            break;
+                switch (c)
+                {
+                    // Q B N R: denote promotion targets
+                    case 'Q':
+                        promotion = QUEEN;
+                        break;
 
-        case 'N':
-            promotion = KNIGHT;
-            break;
+                    case 'B':
+                        promotion = BISHOP;
+                        break;
 
-        case 'R':
-            promotion = ROOK;
-            break;
+                    case 'N':
+                        promotion = KNIGHT;
+                        break;
+
+                    case 'R':
+                        promotion = ROOK;
+                        break;
+
+                    // x :      denote captures, but we can just ignore
+                    // = ( ) /  extra formatting for promotion targets; can ignore
+                    case 'x': case ':':
+                    case '=': case '(': case ')': case '/':
+                        break;
+
+                    // on anything unrecognized, we quit reading
+                    default:
+                        got_unrecognized = true;
+                        break;
+                }
+
+                if (got_unrecognized) { break; }
+            }
+        }
     }
 
     int piece = (white ? WHITE : BLACK) | ptype;
-    int file = file_c - 'a';
-    int rank = rank_c - '1';
-
     int i_match;
     int n_matching_moves = 0;
+
     for (int i_move = 0; i_move < allLegalMoves->n_moves; i_move++)
     {
         struct move *m = &(allLegalMoves->moves[i_move]);
 
-        if (m->to.rank != rank) { continue; }
-        if (m->to.file != file) { continue; }
+        if (m->to.rank != rank_to) { continue; }
+        if (m->to.file != file_to) { continue; }
+
         if (m->promotion != promotion) { continue; }
+
         if (get_piece(b, m->from) != piece) { continue; }
+
+        // We only check the departure rank/file if they were actually set
+        if (rank_from >= 0 && m->from.rank != rank_from) { continue; }
+        if (file_from >= 0 && m->from.file != file_from) { continue; }
 
         i_match = i_move;
         n_matching_moves++;
     }
 
-    // TODO: Support disambiguating by file and/or rank (prefer file)
     if (n_matching_moves != 1)
     {
         fprintf(stderr, "%d moves match string %s (1 expected)\n", n_matching_moves, move);
