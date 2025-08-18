@@ -9,6 +9,8 @@
 #include "board.h"
 #include "moves.h"
 
+#define MAX_DEPTH 1
+
 void initComputer()
 {
     srand(time(NULL));
@@ -56,9 +58,18 @@ int evaluate(struct board *b, int color)
     return total;
 }
 
-struct move getComputerMove(const struct board *b, struct moveList *ml)
+struct moveEvaluation
 {
-    sleep(2);
+    struct move move;
+    int score;
+};
+
+struct moveEvaluation runSearch(struct board *b, int depth)
+{
+    struct moveList ml_instance;
+    struct moveList *ml = &ml_instance;
+    init_movelist(ml);
+    genAllMoves(b, ml);
 
     int best_score = INT_MIN;
     int best_index = -1;
@@ -81,9 +92,21 @@ struct move getComputerMove(const struct board *b, struct moveList *ml)
         struct board b2 = *b;
 
         applyMove(&b2, m);
-        int score = evaluate(&b2, (b->white_to_move ? WHITE : BLACK));
+
+        int score;
+        if (depth > 0)
+        {
+            score = -runSearch(&b2, depth-1).score;
+        }
+        else
+        {
+            score = evaluate(&b2, (b->white_to_move ? WHITE : BLACK));
+        }
 
         /*
+        if (depth == 0)
+            printf("  ");
+
         printf("%d: (%c%c -> %c%c) - score %d\n",
                 i_move,
                 m.from.file + 'a',
@@ -100,7 +123,18 @@ struct move getComputerMove(const struct board *b, struct moveList *ml)
         }
     }
 
-    return ml->moves[best_index];
+    struct moveEvaluation eval = {
+        .move = ml->moves[best_index],
+        .score = best_score
+    };
+
+    return eval;
+}
+
+struct move getComputerMove(struct board *b, struct moveList *ml)
+{
+    sleep(2);
+    return runSearch(b, MAX_DEPTH).move;
 }
 
 #endif // AI_H
