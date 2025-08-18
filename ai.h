@@ -4,12 +4,11 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <time.h>
-#include <unistd.h>
 
 #include "board.h"
 #include "moves.h"
 
-#define MAX_DEPTH 1
+#define MAX_DEPTH 3
 
 void initComputer()
 {
@@ -84,8 +83,6 @@ struct moveEvaluation runSearch(struct board *b, int depth)
         ml->moves[rand_index] = m;
     }
 
-    // Sort moves by a 1-ply evaluation.
-    // TODO: 2-ply and beyond
     for (int i_move = 0; i_move < ml->n_moves; i_move++)
     {
         struct move m = ml->moves[i_move];
@@ -102,19 +99,6 @@ struct moveEvaluation runSearch(struct board *b, int depth)
         {
             score = evaluate(&b2, (b->white_to_move ? WHITE : BLACK));
         }
-
-        /*
-        if (depth == 0)
-            printf("  ");
-
-        printf("%d: (%c%c -> %c%c) - score %d\n",
-                i_move,
-                m.from.file + 'a',
-                m.from.rank + '1',
-                m.to.file + 'a',
-                m.to.rank + '1',
-                score);
-        */
 
         if ((score > best_score) || (best_index < 0))
         {
@@ -133,7 +117,6 @@ struct moveEvaluation runSearch(struct board *b, int depth)
 
 struct move getComputerMove(struct board *b, struct moveList *ml)
 {
-    sleep(2);
     return runSearch(b, MAX_DEPTH).move;
 }
 
