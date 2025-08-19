@@ -82,7 +82,8 @@ int main(void)
         else
         {
             printf("Black is thinking...\n");
-            struct move m = getComputerMove(&b, &ml);
+            struct move m = getComputerMove(&b);
+            printf("(Evaluated %d positions.)\n", eval_counter);
             printMove(&b, m);
             applyMove(&b, m);
         }

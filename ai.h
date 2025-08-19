@@ -8,17 +8,19 @@
 #include "board.h"
 #include "moves.h"
 
-#define MAX_DEPTH 3
+#define MAX_DEPTH 4
+
+int eval_counter = 0;
 
 void initComputer()
 {
     srand(time(NULL));
 }
 
-int evaluate(struct board *b, int color)
+int evaluate(struct board *b)
 {
     int total = 0;
-    int enemy_color = (color == WHITE) ? BLACK : WHITE;
+    int color = b->white_to_move ? WHITE : BLACK;
 
     for (int i = 0; i < 64; i++)
     {
@@ -54,17 +56,17 @@ int evaluate(struct board *b, int color)
         else { total -= value; }
     }
 
+    eval_counter++;
     return total;
 }
 
-struct moveEvaluation
+int runSearch(struct board *b, int depth, struct move *best_move)
 {
-    struct move move;
-    int score;
-};
+    if (depth == 0)
+    {
+        return evaluate(b);
+    }
 
-struct moveEvaluation runSearch(struct board *b, int depth)
-{
     struct moveList ml_instance;
     struct moveList *ml = &ml_instance;
     init_movelist(ml);
@@ -73,6 +75,7 @@ struct moveEvaluation runSearch(struct board *b, int depth)
     int best_score = INT_MIN;
     int best_index = -1;
 
+    /*
     // Do a basic shuffle by repeatedly swapping moves around.
     for (int i_move = 0; i_move < ml->n_moves; i_move++)
     {
@@ -82,6 +85,7 @@ struct moveEvaluation runSearch(struct board *b, int depth)
         ml->moves[i_move] = ml->moves[rand_index];
         ml->moves[rand_index] = m;
     }
+    */
 
     for (int i_move = 0; i_move < ml->n_moves; i_move++)
     {
@@ -90,15 +94,7 @@ struct moveEvaluation runSearch(struct board *b, int depth)
 
         applyMove(&b2, m);
 
-        int score;
-        if (depth > 0)
-        {
-            score = -runSearch(&b2, depth-1).score;
-        }
-        else
-        {
-            score = evaluate(&b2, (b->white_to_move ? WHITE : BLACK));
-        }
+        int score = -runSearch(&b2, depth-1, NULL);
 
         if ((score > best_score) || (best_index < 0))
         {
@@ -107,17 +103,21 @@ struct moveEvaluation runSearch(struct board *b, int depth)
         }
     }
 
-    struct moveEvaluation eval = {
-        .move = ml->moves[best_index],
-        .score = best_score
-    };
+    // If this is the top level, provide the move itself, not just the score
+    if (best_move != NULL)
+    {
+        *best_move = ml->moves[best_index];
+    }
 
-    return eval;
+    return best_score;
 }
 
-struct move getComputerMove(struct board *b, struct moveList *ml)
+struct move getComputerMove(struct board *b)
 {
-    return runSearch(b, MAX_DEPTH).move;
+    eval_counter = 0;
+    struct move m;
+    runSearch(b, MAX_DEPTH, &m);
+    return m;
 }
 
 #endif // AI_H
