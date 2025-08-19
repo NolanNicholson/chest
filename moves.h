@@ -26,9 +26,10 @@ void init_movelist(struct moveList *list)
     list->n_moves = 0;
 }
 
-bool putsKingInCheck(const struct board *b, struct move m);
-void genAllPseudoLegalMoves(struct board *b, struct moveList *list);
-void genAllMoves(struct board *b, struct moveList *list);
+bool isKingInCheck(const struct board *b);
+bool leavesKingInDanger(const struct board *b, struct move m);
+void genAllPseudoLegalMoves(const struct board *b, struct moveList *list);
+void genAllMoves(const struct board *b, struct moveList *list);
 void genMovesForPiece(const struct board *b, struct coord from, struct moveList *list);
 void genPseudoLegalMovesForPiece(const struct board *b, struct coord from, struct moveList *list);
 bool isMoveLegal(const struct board *b, struct move m);
@@ -401,31 +402,41 @@ void genPseudoLegalMovesForPiece(const struct board *b, struct coord from, struc
     }
 }
 
-bool putsKingInCheck(const struct board *b, struct move m)
+bool canNextMoveDestroyKing(const struct board *b)
 {
-    // Moves which leave the king vulnerable to capture are not allowed.
-    // We handle this by making our move on the copy of the board, generating
-    // all moves for the opponent, and seeing if any target our king.
+    struct moveList list;
+    init_movelist(&list);
+    genAllPseudoLegalMoves(b, &list);
 
-    int friendly_color = get_piece(b, m.from) & PIECE_COLOR;
-
-    struct board b2 = *b;
-    applyMove(&b2, m);
-
-    struct moveList list_opponent;
-    init_movelist(&list_opponent);
-    genAllPseudoLegalMoves(&b2, &list_opponent);
-
-    for (int i_response = 0; i_response < list_opponent.n_moves; i_response++)
+    for (int i = 0; i < list.n_moves; i++)
     {
-        struct coord to = list_opponent.moves[i_response].to;
-        if (get_piece(&b2, to) == (friendly_color | KING))
+        struct coord to = list.moves[i].to;
+        if ((get_piece(b, to) & PIECE_TYPE) == KING)
         {
             return true;
         }
     }
 
     return false;
+}
+
+bool isKingInCheck(const struct board *b)
+{
+    // To check whether the king is ~currently~ in check,
+    // we flip control of (a copy of) the board without making a move.
+    // Then, we see if any of the responses can destroy the king.
+    struct board b2 = *b;
+    b2.white_to_move ^= 1;
+
+    return canNextMoveDestroyKing(&b2);
+}
+
+bool leavesKingInDanger(const struct board *b, struct move m)
+{
+    struct board b2 = *b;
+    applyMove(&b2, m);
+
+    return canNextMoveDestroyKing(&b2);
 }
 
 void genMovesForPiece(const struct board *b, struct coord from, struct moveList *list)
@@ -461,23 +472,23 @@ bool isMoveLegal(const struct board *b, struct move m)
         {
             for (tentative.to.file = m.from.file; tentative.to.file < 7; tentative.to.file++)
             {
-                if (putsKingInCheck(b, tentative)) { return false; }
+                if (leavesKingInDanger(b, tentative)) { return false; }
             }
         }
         else if ((m.to.file - m.from.file) == -2)
         {
             for (tentative.to.file = m.from.file; tentative.to.file > 1; tentative.to.file--)
             {
-                if (putsKingInCheck(b, tentative)) { return false; }
+                if (leavesKingInDanger(b, tentative)) { return false; }
             }
         }
     }
 
-    return !putsKingInCheck(b, m);
+    return !leavesKingInDanger(b, m);
 }
 
 
-void genAllPseudoLegalMoves(struct board *b, struct moveList *list)
+void genAllPseudoLegalMoves(const struct board *b, struct moveList *list)
 {
     int piece_color = b->white_to_move ? WHITE : BLACK;
 
@@ -494,7 +505,7 @@ void genAllPseudoLegalMoves(struct board *b, struct moveList *list)
     }
 }
 
-void genAllMoves(struct board *b, struct moveList *list)
+void genAllMoves(const struct board *b, struct moveList *list)
 {
     int piece_color = b->white_to_move ? WHITE : BLACK;
     int pieces_examined = 0;

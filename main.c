@@ -34,15 +34,24 @@ int main(void)
         init_movelist(&ml);
         genAllMoves(&b, &ml);
 
-        print_board(&b, NULL);
+        printBoard(&b, NULL);
 
         if (ml.n_moves == 0)
         {
-            // TODO: No legal moves means stalemate, not checkmate,
-            // if the king is not currently in check.
-            // For example: "k7/1R6/2K5/8/8/8/8/8 b - - 0 1"
-            printf("Checkmate! %s wins!\n", b.white_to_move ? "Black" : "White");
-            return 0;
+            // If one side has no legal moves available,
+            // that's checkmate if the king is currently in check,
+            // and stalemate otherwise.
+            // For example: "k7/1R6/2K5/8/8/8/8/8 b - - 0 1" is stalemate.
+            if (isKingInCheck(&b))
+            {
+                printf(PRINT_ALERT "Checkmate! %s wins!" PRINT_RESET "\n", b.white_to_move ? "Black" : "White");
+                return 0;
+            }
+            else
+            {
+                printf(PRINT_ALERT "Stalemate!" PRINT_RESET "\n");
+                return 0;
+            }
         }
 
         char cmd[64];
@@ -61,7 +70,7 @@ int main(void)
                     return 0;
                 }
 
-                if (move_algebraic(&b, cmd, &ml))
+                if (moveAlgebraic(&b, cmd, &ml))
                 {
                     break;
                 }

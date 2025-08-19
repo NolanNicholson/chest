@@ -20,13 +20,14 @@
 #define ANSI_BG_GREEN "42"
 #define ANSI_BG_HIGREEN "102"
 
+#define PRINT_ALERT         "\e[91;1m"
 #define PRINT_BSQUARE       "\e[48;2;210;140;69;" ANSI_FG_BLACK "m"
 #define PRINT_WSQUARE       "\e[48;2;255;207;159;" ANSI_FG_BLACK "m"
 #define PRINT_MOVESSQUARE   "\e[" ANSI_BG_HIGREEN ";" ANSI_FG_BLACK "m"
 #define PRINT_SELECTSQUARE  "\e[" ANSI_BG_GREEN ";" ANSI_FG_BLACK "m"
 #define PRINT_RESET         "\e[0m"
 
-void print_board(const struct board *b, const struct moveList *ml)
+void printBoard(const struct board *b, const struct moveList *ml)
 {
     bool white_square;
 
@@ -130,6 +131,10 @@ void print_board(const struct board *b, const struct moveList *ml)
         printf("\n");
     }
     printf("  a b c d e f g h\n\n");
+    if (isKingInCheck(b))
+    {
+        printf(PRINT_ALERT "%s's king is in check!" PRINT_RESET "\n", b->white_to_move ? "White" : "Black");
+    }
 }
 
 struct coord coordstr(const char *str)
@@ -141,7 +146,7 @@ struct coord coordstr(const char *str)
     return output;
 }
 
-bool move_algebraic(struct board *b, const char *move, struct moveList *allLegalMoves)
+bool moveAlgebraic(struct board *b, const char *move, struct moveList *allLegalMoves)
 {
     int i = 0; // index into the move string
     int ptype;
