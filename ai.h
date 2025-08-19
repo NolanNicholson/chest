@@ -72,6 +72,13 @@ int runSearch(struct board *b, int depth, struct move *best_move)
     init_movelist(ml);
     genAllMoves(b, ml);
 
+    if (ml->n_moves == 0)
+    {
+        // Note: it has to be -INT_MAX, not INT_MIN,
+        // because -INT_MIN is undefined behavior!
+        return isKingInCheck(b) ? -INT_MAX : 0;
+    }
+
     int best_score = INT_MIN;
     int best_index = -1;
 
