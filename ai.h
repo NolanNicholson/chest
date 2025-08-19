@@ -60,7 +60,7 @@ int evaluate(struct board *b)
     return total;
 }
 
-int runSearch(struct board *b, int depth, struct move *best_move)
+int runSearch(struct board *b, int depth, int alpha, int beta, struct move *best_move)
 {
     if (depth == 0)
     {
@@ -82,7 +82,6 @@ int runSearch(struct board *b, int depth, struct move *best_move)
     int best_score = INT_MIN;
     int best_index = -1;
 
-    /*
     // Do a basic shuffle by repeatedly swapping moves around.
     for (int i_move = 0; i_move < ml->n_moves; i_move++)
     {
@@ -92,7 +91,6 @@ int runSearch(struct board *b, int depth, struct move *best_move)
         ml->moves[i_move] = ml->moves[rand_index];
         ml->moves[rand_index] = m;
     }
-    */
 
     for (int i_move = 0; i_move < ml->n_moves; i_move++)
     {
@@ -101,13 +99,20 @@ int runSearch(struct board *b, int depth, struct move *best_move)
 
         applyMove(&b2, m);
 
-        int score = -runSearch(&b2, depth-1, NULL);
+        int score = -runSearch(&b2, depth-1, -beta, -alpha, NULL);
 
-        if ((score > best_score) || (best_index < 0))
+        if (score > best_score)
         {
             best_score = score;
             best_index = i_move;
         }
+
+        if (best_score >= beta)
+        {
+            break;
+        }
+
+        alpha = MAX(alpha, score);
     }
 
     // If this is the top level, provide the move itself, not just the score
@@ -123,7 +128,7 @@ struct move getComputerMove(struct board *b)
 {
     eval_counter = 0;
     struct move m;
-    runSearch(b, MAX_DEPTH, &m);
+    runSearch(b, MAX_DEPTH, -INT_MAX, INT_MAX, &m);
     return m;
 }
 
