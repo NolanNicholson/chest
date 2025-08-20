@@ -1,2 +1,2 @@
-nchess : *.c *.h
-	gcc -g -o nchess *.c
+chest : *.c *.h
+	gcc -g -o chest *.c
