@@ -1,5 +1,7 @@
 # Chest
 
+![Screenshot](screenshot.png)
+
 Chest is a simple command-line chess program written in C.
 
 ## Build
