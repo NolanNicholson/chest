@@ -39,4 +39,4 @@ example:
   ["Coding Adventure: Chess"](https://www.youtube.com/watch?v=U4ogK0MIzqk)
   video.
 * Additional useful information came from the [Chess Programming
-  wiki](www.chessprogramming.org/).
+  wiki](https://www.chessprogramming.org/).
