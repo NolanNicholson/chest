@@ -3,6 +3,10 @@
 #include "cli.h"
 #include "ai.h"
 
+// WHITE | BLACK for both humans
+// NONE for both computers
+#define HUMAN_PLAYER WHITE
+
 bool select_piece(const char *coord_str, struct board *b, struct moveList *ml)
 {
     int i = 0;
@@ -55,14 +59,15 @@ int main(void)
         }
 
         char cmd[64];
+        int mover = b.white_to_move ? WHITE : BLACK;
+        const char *mover_str = b.white_to_move ? "White" : "Black";
 
-        // White is human (TODO: make this adjustable)
-        if (b.white_to_move)
+        if (mover & HUMAN_PLAYER)
         {
             // Prompt loop
             while (true)
             {
-                printf("Enter command: ");
+                printf("Enter %s's move (or q to quit): ", mover_str);
                 scanf("%s", cmd);
 
                 if (strcmp(cmd, "q") == 0)
@@ -78,10 +83,9 @@ int main(void)
                 printf("Invalid input. Enter a legal move in algebraic notation, or enter 'q' to quit.\n");
             }
         }
-        // Black is computer (TODO: make this adjustable)
         else
         {
-            printf("Black is thinking...\n");
+            printf("%s is thinking...\n", mover_str);
             struct move m = getComputerMove(&b);
             printf("(Evaluated %d positions.)\n", eval_counter);
             printMove(&b, m);

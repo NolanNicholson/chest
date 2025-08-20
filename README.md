@@ -21,6 +21,7 @@ example:
 ## TODO
 
 ### Correctness
+* BUG: Pawns can "jump over" other pieces when double-pushing.
 * Add tests to validate that move generation is correct.
 * Implement threefold repetition and the fifty-move rule for detecting draws.
 
@@ -28,8 +29,6 @@ example:
 * Add iterative deepening within a time constraint.
 
 ### Interface
-* Currently, the human player always plays as White, and the computer always
-  plays as Black. This should be customizable.
 * Allow the Chest AI to communicate via UCI.
 * Determine the Chest AI's Elo rating.
 
