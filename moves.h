@@ -314,13 +314,15 @@ void genPseudoLegalMovesForPiece(const struct board *b, struct coord from, struc
             int doublePushRank = singlePushRank + dir;
 
             // Straight forward single pushes cannot be captures
-            tryAddMoveRestricted(b, piece, from, (struct coord) { singlePushRank, from.file }, list, FREE);
+            enum moveType singlePush =
+                tryAddMoveRestricted(b, piece, from, (struct coord) { singlePushRank, from.file }, list, FREE);
 
             // Diagonal forward pushes must be captures
             tryAddMoveRestricted(b, piece, from, (struct coord) { singlePushRank, from.file-1 }, list, CAPTURE);
             tryAddMoveRestricted(b, piece, from, (struct coord) { singlePushRank, from.file+1 }, list, CAPTURE);
 
-            if (from.rank == startRank)
+            // Double push
+            if (singlePush == FREE && from.rank == startRank)
             {
                 tryAddMoveRestricted(b, piece, from, (struct coord) { doublePushRank, from.file }, list, FREE);
             }

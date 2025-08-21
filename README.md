@@ -23,7 +23,6 @@ example:
 ## TODO
 
 ### Correctness
-* BUG: Pawns can "jump over" other pieces when double-pushing.
 * Add tests to validate that move generation is correct.
 * Implement threefold repetition and the fifty-move rule for detecting draws.
 
