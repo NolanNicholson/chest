@@ -8,7 +8,9 @@ Chest is a simple command-line chess program written in C.
 
 `gcc` and `make` are required. No external libraries are used.
 
-Run `make` to build the program.
+Run `make` to build the program. Two executables will result:
+* `chest`, the main program
+* `test`, a set of self-tests
 
 ## Play
 
@@ -22,8 +24,10 @@ example:
 
 ## TODO
 
-### Correctness
-* Add tests to validate that move generation is correct.
+### Correctness and Performance
+* Some Perft move generation tests are failing; diagnose and fix.
+* Implement "undo", and use it in the Perft tests and elsewhere.
+* Try other ways to make the Perft tests quicker. (Currently, they take 35 seconds at max depth 4 on my PC.)
 * Implement threefold repetition and the fifty-move rule for detecting draws.
 
 ### AI
