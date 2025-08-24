@@ -119,11 +119,25 @@ void applyMove(struct board *b, struct move m)
     switch (target_piece)
     {
         case WHITE | ROOK:
-            b->castles_available &= ~(m.to.file == 0 ? CASTLE_WQ : CASTLE_WK);
+            if (m.to.rank == 0 && m.to.file == 0)
+            {
+                b->castles_available &= ~CASTLE_WQ;
+            }
+            else if (m.to.rank == 0 && m.to.file == 7)
+            {
+                b->castles_available &= ~CASTLE_WK;
+            }
             break;
 
         case BLACK | ROOK:
-            b->castles_available &= ~(m.to.file == 0 ? CASTLE_BQ : CASTLE_BK);
+            if (m.to.rank == 7 && m.to.file == 0)
+            {
+                b->castles_available &= ~CASTLE_BQ;
+            }
+            else if (m.to.rank == 7 && m.to.file == 7)
+            {
+                b->castles_available &= ~CASTLE_BK;
+            }
             break;
     }
 

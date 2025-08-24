@@ -125,10 +125,10 @@ void apply_FEN(struct board *b, const char *fen)
             case APPLY_FEN_STATE_CASTLING:
                 switch (c)
                 {
-                    case 'K': b->castles_available |= CASTLE_WK;
-                    case 'Q': b->castles_available |= CASTLE_WQ;
-                    case 'k': b->castles_available |= CASTLE_BK;
-                    case 'q': b->castles_available |= CASTLE_BQ;
+                    case 'K': b->castles_available |= CASTLE_WK; break;
+                    case 'Q': b->castles_available |= CASTLE_WQ; break;
+                    case 'k': b->castles_available |= CASTLE_BK; break;
+                    case 'q': b->castles_available |= CASTLE_BQ; break;
                 }
                 break;
 

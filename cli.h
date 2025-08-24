@@ -27,6 +27,70 @@
 #define PRINT_SELECTSQUARE  "\e[" ANSI_BG_GREEN ";" ANSI_FG_BLACK "m"
 #define PRINT_RESET         "\e[0m"
 
+void printFEN(const struct board *b)
+{
+    for (int rank = 7; rank >= 0; rank--)
+    {
+        int space = 0;
+        for (int file = 0; file <= 7; file++)
+        {
+            int piece = get_piece(b, (struct coord) { rank, file });
+
+            switch (piece)
+            {
+                case NONE:
+                    space++;
+                    break;
+                default:
+                    if (space > 0) { printf("%d", space); }
+                    space = 0;
+                    break;
+            }
+
+            switch (piece)
+            {
+                case WHITE | BISHOP:    putc('B', stdout); break;
+                case WHITE | KING:      putc('K', stdout); break;
+                case WHITE | KNIGHT:    putc('N', stdout); break;
+                case WHITE | PAWN:      putc('P', stdout); break;
+                case WHITE | ROOK:      putc('R', stdout); break;
+                case WHITE | QUEEN:     putc('Q', stdout); break;
+
+                case BLACK | BISHOP:    putc('b', stdout); break;
+                case BLACK | KING:      putc('k', stdout); break;
+                case BLACK | KNIGHT:    putc('n', stdout); break;
+                case BLACK | PAWN:      putc('p', stdout); break;
+                case BLACK | ROOK:      putc('r', stdout); break;
+                case BLACK | QUEEN:     putc('q', stdout); break;
+            }
+        }
+
+        if (space > 0) { printf("%d", space); }
+        if (rank != 0) { putc('/', stdout); }
+    }
+
+    printf(" %c ", b->white_to_move ? 'w' : 'b');
+
+    // Castling
+    if (b->castles_available)
+    {
+        if (b->castles_available & CASTLE_WK) { putc('K', stdout); }
+        if (b->castles_available & CASTLE_WQ) { putc('Q', stdout); }
+        if (b->castles_available & CASTLE_BK) { putc('k', stdout); }
+        if (b->castles_available & CASTLE_BQ) { putc('q', stdout); }
+    }
+    else
+    {
+        putc('-', stdout);
+    }
+
+    putc(' ', stdout);
+
+    // TODO: ep target, move counter, half-move counter
+
+    putc('\n', stdout);
+}
+
 void printBoard(const struct board *b, const struct moveList *ml)
 {
     bool white_square;

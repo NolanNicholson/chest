@@ -75,6 +75,12 @@ int main(void)
                     return 0;
                 }
 
+                else if(strcmp(cmd, "fen") == 0)
+                {
+                    printFEN(&b);
+                    continue;
+                }
+
                 if (moveAlgebraic(&b, cmd, &ml))
                 {
                     break;
