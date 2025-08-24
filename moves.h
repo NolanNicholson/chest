@@ -487,6 +487,7 @@ bool canNextMoveDestroyKing(const struct board *b)
         struct coord offset = sliding_offsets[i_offset];
         bool diagonal = ((offset.rank + offset.file + 2) % 2) == 0;
         int steps = 0;
+        bool finished_slide = false;
 
         while (true)
         {
@@ -513,19 +514,20 @@ bool canNextMoveDestroyKing(const struct board *b)
 
                 case BISHOP:
                     if (diagonal) { return true; }
-                    else { break; }
+                    else { finished_slide = true; break; }
 
                 case ROOK:
                     if (!diagonal) { return true; }
-                    else { break; }
+                    else { finished_slide = true; break; }
 
                 case KING:
                     if (steps == 1) { return true; }
-                    else { break; }
+                    else { finished_slide = true; break; }
 
-                default:
-                    break;
+                default: finished_slide = true; break;
             }
+
+            if (finished_slide) { break; }
         }
     }
 
