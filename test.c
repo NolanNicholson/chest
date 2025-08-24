@@ -128,9 +128,8 @@ int main()
     num_tests++;
     if (runPerftTest(&perft_test_3)) { num_success++; }
 
-    // mirrored version
     struct PerftTest perft_test_4 = {
-        .start_pos = "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1",
+        .start_pos = "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
         .max_depth = 6,
         .expected = {
             1,
@@ -145,6 +144,24 @@ int main()
 
     num_tests++;
     if (runPerftTest(&perft_test_4)) { num_success++; }
+
+    // mirrored version
+    struct PerftTest perft_test_4m = {
+        .start_pos = "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1", // mirrored
+        .max_depth = 6,
+        .expected = {
+            1,
+            6,
+            264,
+            9467,
+            422333,
+            15833293,
+            706045033
+        }
+    };
+
+    num_tests++;
+    if (runPerftTest(&perft_test_4m)) { num_success++; }
 
     struct PerftTest perft_test_5 = {
         .start_pos = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",

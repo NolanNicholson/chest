@@ -406,16 +406,126 @@ void genPseudoLegalMovesForPiece(const struct board *b, struct coord from, struc
 
 bool canNextMoveDestroyKing(const struct board *b)
 {
-    struct moveList list;
-    init_movelist(&list);
-    genAllPseudoLegalMoves(b, &list);
+    int attacker_color = b->white_to_move ? WHITE : BLACK;
+    int target_color = b->white_to_move ? BLACK : WHITE;
 
-    for (int i = 0; i < list.n_moves; i++)
+    // Find the king on the board.
+    struct coord king_at;
+    bool found_king = false;
+    for (king_at.rank = 0; king_at.rank < 8; king_at.rank++)
     {
-        struct coord to = list.moves[i].to;
-        if ((get_piece(b, to) & PIECE_TYPE) == KING)
+        for (king_at.file = 0; king_at.file < 8; king_at.file++)
         {
+            if (get_piece(b, king_at) == (target_color | KING))
+            {
+                found_king = true;
+                break;
+            }
+        }
+
+        if (found_king) { break; }
+    }
+
+    // Check for pawns. (Don't check straight ahead!)
+    int offset_rank_pawn = b->white_to_move ? -1 : 1;
+    for (int offset_file = -1; offset_file <= 1; offset_file += 2)
+    {
+        struct coord at = king_at;
+        at.rank += offset_rank_pawn;
+        at.file += offset_file;
+
+        if (at.rank < 0) { continue; }
+        if (at.rank > 7) { continue; }
+        if (at.file < 0) { continue; }
+        if (at.file > 7) { continue; }
+
+        int this_piece = get_piece(b, at);
+        if (this_piece == (attacker_color | PAWN)) {
             return true;
+        }
+    }
+
+    // Check for knights.
+    const struct coord knight_offsets[] = {
+        { -1, -2 }, { 1, -2 },
+        { -1, 2 }, { 1, 2 },
+        { -2, -1 }, { 2, -1 },
+        { -2, 1 }, { 2, 1 },
+    };
+
+    for (int i_offset = 0; i_offset < 8; i_offset++)
+    {
+        struct coord at = king_at;
+        struct coord offset = knight_offsets[i_offset];
+
+        at.rank += offset.rank;
+        at.file += offset.file;
+
+        if (at.rank < 0) { continue; }
+        if (at.rank > 7) { continue; }
+        if (at.file < 0) { continue; }
+        if (at.file > 7) { continue; }
+
+        int this_piece = get_piece(b, at);
+        if (this_piece == (attacker_color | KNIGHT)) { return true; }
+    }
+
+    // Here, we sort of scan the board as if the king were a queen. If it
+    // encounters a piece that could capture it in that direction, then it is
+    // endangered. For example, if we set out from the king diagonally, and
+    // encounter an enemy bishop before any other piece in that direction, then
+    // the king is endangered.
+
+    const struct coord sliding_offsets[] = {
+        { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 },
+        { -1, -1 }, { -1, 1 }, { 1, -1 }, { 1, 1 }
+    };
+
+    for (int i_offset = 0; i_offset < 8; i_offset++)
+    {
+        struct coord at = king_at;
+        struct coord offset = sliding_offsets[i_offset];
+        bool diagonal = ((offset.rank + offset.file + 2) % 2) == 0;
+        int steps = 0;
+
+        while (true)
+        {
+            at.rank += offset.rank;
+            at.file += offset.file;
+            steps++;
+
+            if (at.rank < 0) { break; }
+            if (at.rank > 7) { break; }
+            if (at.file < 0) { break; }
+            if (at.file > 7) { break; }
+
+            int this_piece = get_piece(b, at);
+            int this_color = this_piece & PIECE_COLOR;
+            int this_type = this_piece & PIECE_TYPE;
+
+            if (this_color == target_color) { break; }
+            if (this_color == NONE) { continue; }
+
+            switch (this_type)
+            {
+                case QUEEN:
+                    return true;
+
+                case BISHOP:
+                    if (diagonal) { return true; }
+                    else { break; }
+
+                case ROOK:
+                    if (!diagonal) { return true; }
+                    else { break; }
+
+                case KING:
+                    if (steps == 1) { return true; }
+                    else { break; }
+
+                default:
+                    break;
+            }
         }
     }
 
