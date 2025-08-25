@@ -22,13 +22,17 @@ example:
 * To move a knight to f3, type `Nf3` and hit Enter.
 * To perform a king-side castle, type either `o-o` or `Kg1` and hit Enter.
 
+You can also do the following:
+* To quit, type `q` and hit Enter.
+* To print the current board state in Forsyth-Edwards Notation (FEN), type `fen` and hit Enter.
+
 ## TODO
 
 ### Correctness and Performance
 * Some Perft move generation tests are failing; diagnose and fix.
-* Implement "undo", and use it in the Perft tests and elsewhere.
-* Try other ways to make the Perft tests quicker. (Currently, they take 35 seconds at max depth 4 on my PC.)
+* Try other ways to make move generation and evaluation quicker. (Currently, the Perft tests take 10 seconds at max depth 4 on my PC.)
 * Implement threefold repetition and the fifty-move rule for detecting draws.
+* Add the missing fields to the `printFEN` function.
 
 ### AI
 * Add iterative deepening within a time constraint.

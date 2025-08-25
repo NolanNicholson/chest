@@ -4,7 +4,7 @@
 #include "board.h"
 #include "moves.h"
 
-#define MAX_PERFT_DEPTH 4
+#define MAX_PERFT_DEPTH 5
 
 long long int perft(const struct board *b, int depth)
 {
