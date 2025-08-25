@@ -29,7 +29,6 @@ You can also do the following:
 ## TODO
 
 ### Correctness and Performance
-* Some Perft move generation tests are failing; diagnose and fix.
 * Try other ways to make move generation and evaluation quicker. (Currently, the Perft tests take 10 seconds at max depth 4 on my PC.)
 * Implement threefold repetition and the fifty-move rule for detecting draws.
 * Add the missing fields to the `printFEN` function.

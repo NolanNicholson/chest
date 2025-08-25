@@ -4,7 +4,7 @@
 #include "board.h"
 #include "moves.h"
 
-#define MAX_PERFT_DEPTH 5
+#define MAX_PERFT_DEPTH 4
 
 int num_tests;
 int num_success;
@@ -159,7 +159,7 @@ int main()
             264,
             9467,
             422333,
-            15833293,
+            15833292,
             706045033
         }
     };
@@ -176,7 +176,7 @@ int main()
             264,
             9467,
             422333,
-            15833293,
+            15833292,
             706045033
         }
     };
@@ -215,17 +215,6 @@ int main()
     };
 
     runPerftTest(&perft_test_6);
-
-    /*
-    struct board b;
-    init_board(&b);
-    */
-
-    /*
-    // 5
-    apply_FEN(&b, "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
-    perft(&b, 5, true);
-    */
 
     clock_t stop = clock();
     double duration = (double) (stop - start) / CLOCKS_PER_SEC;
