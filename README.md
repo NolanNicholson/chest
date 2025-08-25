@@ -29,7 +29,7 @@ You can also do the following:
 ## TODO
 
 ### Correctness and Performance
-* Try other ways to make move generation and evaluation quicker. (Currently, the Perft tests take 10 seconds at max depth 4 on my PC.)
+* Try other ways to make move generation and evaluation quicker (e.g., bitboards.)
 * Implement threefold repetition and the fifty-move rule for detecting draws.
 * Add the missing fields to the `printFEN` function.
 

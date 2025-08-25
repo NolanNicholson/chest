@@ -68,7 +68,10 @@ int main(void)
             while (true)
             {
                 printf("Enter %s's move (or q to quit): ", mover_str);
-                scanf("%s", cmd);
+                if (scanf("%s", cmd) != 1)
+                {
+                    continue;
+                }
 
                 if (strcmp(cmd, "q") == 0)
                 {
