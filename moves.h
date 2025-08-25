@@ -79,13 +79,29 @@ void applyMove(struct board *b, struct move m)
             b->castles_available &= ~(CASTLE_BK | CASTLE_BQ);
             break;
 
-        // Moving a rook means you can no longer castle in that rook's direction.
+        // Moving a rook from one of the two original rook spots means you can
+        // no longer castle in that rook's direction. Promoted rooks shouldn't
+        // affect this!
         case WHITE | ROOK:
-            b->castles_available &= ~(m.from.file == 0 ? CASTLE_WQ : CASTLE_WK);
+            if (m.from.rank == 0 && m.from.file == 0)
+            {
+                b->castles_available &= ~CASTLE_WQ;
+            }
+            else if (m.from.rank == 0 && m.from.file == 7)
+            {
+                b->castles_available &= ~CASTLE_WK;
+            }
             break;
 
         case BLACK | ROOK:
-            b->castles_available &= ~(m.from.file == 0 ? CASTLE_BQ : CASTLE_BK);
+            if (m.from.rank == 7 && m.from.file == 0)
+            {
+                b->castles_available &= ~CASTLE_BQ;
+            }
+            else if (m.from.rank == 7 && m.from.file == 7)
+            {
+                b->castles_available &= ~CASTLE_BK;
+            }
             break;
 
         case WHITE | PAWN:

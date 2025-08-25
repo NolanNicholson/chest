@@ -6,7 +6,10 @@
 
 #define MAX_PERFT_DEPTH 5
 
-long long int perft(const struct board *b, int depth)
+int num_tests;
+int num_success;
+
+long long int perft(const struct board *b, int depth, bool print)
 {
     long long int nodes = 0;
 
@@ -23,7 +26,26 @@ long long int perft(const struct board *b, int depth)
         struct board b2 = *b;
         applyMove(&b2, ml.moves[i]);
 
-        nodes += perft(&b2, depth-1);
+        long long int responses = perft(&b2, depth-1, false);
+        if (print)
+        {
+            struct move m = ml.moves[i];
+            printf("%c%c%c%c",
+                    m.from.file + 'a',
+                    m.from.rank + '1',
+                    m.to.file + 'a',
+                    m.to.rank + '1');
+            switch (m.promotion)
+            {
+                case QUEEN:     putc('q', stdout); break;
+                case BISHOP:    putc('b', stdout); break;
+                case KNIGHT:    putc('n', stdout); break;
+                case ROOK:      putc('r', stdout); break;
+            }
+            printf(": %lld\n", responses);
+        }
+
+        nodes += responses;
     }
 
     return nodes;
@@ -38,6 +60,8 @@ struct PerftTest
 
 bool runPerftTest(struct PerftTest *test)
 {
+    num_tests++;
+
     printf("Perft test on %s\n", test->start_pos);
     struct board b;
     init_board(&b);
@@ -47,7 +71,7 @@ bool runPerftTest(struct PerftTest *test)
 
     for (int depth = 1; depth <= max_depth; depth++)
     {
-        long long int perft_result = perft(&b, depth);
+        long long int perft_result = perft(&b, depth, false);
         if (perft_result == test->expected[depth])
         {
             printf("  depth %d OK - %lld\n", depth, perft_result);
@@ -60,14 +84,15 @@ bool runPerftTest(struct PerftTest *test)
         }
     }
 
+    num_success++;
     return true;
 }
 
 int main()
 {
     clock_t start = clock();
-    int num_tests = 0;
-    int num_success = 0;
+    num_tests = 0;
+    num_success = 0;
 
     // Perft positions and results from:
     // https://www.chessprogramming.org/Perft_Results
@@ -89,8 +114,7 @@ int main()
         }
     };
 
-    num_tests++;
-    if (runPerftTest(&perft_test_1)) { num_success++; }
+    runPerftTest(&perft_test_1);
 
     struct PerftTest perft_test_2 = {
         .start_pos = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ",
@@ -106,8 +130,7 @@ int main()
         }
     };
 
-    num_tests++;
-    if (runPerftTest(&perft_test_2)) { num_success++; }
+    runPerftTest(&perft_test_2);
 
     struct PerftTest perft_test_3 = {
         .start_pos = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1",
@@ -125,8 +148,7 @@ int main()
         }
     };
 
-    num_tests++;
-    if (runPerftTest(&perft_test_3)) { num_success++; }
+    runPerftTest(&perft_test_3);
 
     struct PerftTest perft_test_4 = {
         .start_pos = "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
@@ -142,8 +164,7 @@ int main()
         }
     };
 
-    num_tests++;
-    if (runPerftTest(&perft_test_4)) { num_success++; }
+    runPerftTest(&perft_test_4);
 
     // mirrored version
     struct PerftTest perft_test_4m = {
@@ -160,8 +181,7 @@ int main()
         }
     };
 
-    num_tests++;
-    if (runPerftTest(&perft_test_4m)) { num_success++; }
+    runPerftTest(&perft_test_4m);
 
     struct PerftTest perft_test_5 = {
         .start_pos = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",
@@ -176,8 +196,7 @@ int main()
         }
     };
 
-    num_tests++;
-    if (runPerftTest(&perft_test_5)) { num_success++; }
+    runPerftTest(&perft_test_5);
 
     struct PerftTest perft_test_6 = {
         .start_pos = "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10",
@@ -195,8 +214,18 @@ int main()
         }
     };
 
-    num_tests++;
-    if (runPerftTest(&perft_test_6)) { num_success++; }
+    runPerftTest(&perft_test_6);
+
+    /*
+    struct board b;
+    init_board(&b);
+    */
+
+    /*
+    // 5
+    apply_FEN(&b, "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
+    perft(&b, 5, true);
+    */
 
     clock_t stop = clock();
     double duration = (double) (stop - start) / CLOCKS_PER_SEC;
