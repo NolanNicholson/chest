@@ -8,8 +8,8 @@
 #include "board.h"
 #include "moves.h"
 
-#define MAX_DEPTH 10
-#define MAX_SECONDS 1
+#define MAX_DEPTH 5
+#define MAX_SECONDS 5
 
 #ifdef MAX_SECONDS
 #define MAX_CLOCKS (MAX_SECONDS * CLOCKS_PER_SEC)

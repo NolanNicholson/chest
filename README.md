@@ -34,7 +34,7 @@ You can also do the following:
 * Add the missing fields to the `printFEN` function.
 
 ### AI
-* Add iterative deepening within a time constraint.
+* Fix: Early termination due to time constraint causes the AI to make unwise captures (e.g., trading a queen for a bishop.)
 
 ### Interface
 * Allow the Chest AI to communicate via UCI.
