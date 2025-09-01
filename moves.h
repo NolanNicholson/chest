@@ -11,6 +11,16 @@ struct move
     bool isCapture;
 };
 
+bool movesEqual(const struct move *m1, const struct move *m2)
+{
+    return ((m1->from.rank == m2->from.rank)
+            && (m1->from.file == m2->from.file)
+            && (m1->to.rank == m2->to.rank)
+            && (m1->to.file == m2->to.file)
+            && (m1->promotion == m2->promotion)
+            && (m1->isCapture == m2->isCapture));
+}
+
 // Max possible moves that could be made from one position.
 //https://chess.stackexchange.com/questions/4490/maximum-possible-movement-in-a-turn
 #define MAX_MOVES 218

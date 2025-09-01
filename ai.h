@@ -8,7 +8,13 @@
 #include "board.h"
 #include "moves.h"
 
-#define MAX_DEPTH 4
+#define MAX_DEPTH 5
+#define MAX_SECONDS 1
+
+#ifdef MAX_SECONDS
+#define MAX_CLOCKS (MAX_SECONDS * CLOCKS_PER_SEC)
+clock_t deadline;
+#endif
 
 int eval_counter = 0;
 
@@ -92,6 +98,26 @@ int runSearch(struct board *b, int depth, int alpha, int beta, struct move *best
         ml->moves[rand_index] = m;
     }
 
+    // If best_move is already populated with something that matches
+    // one of our moves, consider that a guess, and put it first.
+    if (best_move != NULL)
+    {
+        for (int i_move = 0; i_move < ml->n_moves; i_move++)
+        {
+            struct move *m = &(ml->moves[i_move]);
+            if (movesEqual(m, best_move))
+            {
+                struct move m = ml->moves[i_move];
+                ml->moves[i_move] = ml->moves[0];
+                ml->moves[0] = m;
+
+                break;
+            }
+        }
+    }
+
+    // This search algorithm is "negamax" with alpha-beta pruning.
+    // https://en.wikipedia.org/wiki/Negamax
     for (int i_move = 0; i_move < ml->n_moves; i_move++)
     {
         struct move m = ml->moves[i_move];
@@ -107,12 +133,11 @@ int runSearch(struct board *b, int depth, int alpha, int beta, struct move *best
             best_index = i_move;
         }
 
-        if (best_score >= beta)
+        alpha = MAX(alpha, best_score);
+        if (alpha >= beta)
         {
             break;
         }
-
-        alpha = MAX(alpha, score);
     }
 
     // If this is the top level, provide the move itself, not just the score
@@ -128,7 +153,21 @@ struct move getComputerMove(struct board *b)
 {
     eval_counter = 0;
     struct move m;
-    runSearch(b, MAX_DEPTH, -INT_MAX, INT_MAX, &m);
+
+#ifdef MAX_SECONDS
+    deadline = clock() + MAX_CLOCKS;
+#endif
+
+    // Iterative deepening from depth 1 to our max depth.
+    for (int depth = 1; depth <= MAX_DEPTH; depth++)
+    {
+        runSearch(b, depth, -INT_MAX, INT_MAX, &m);
+
+#ifdef MAX_SECONDS
+        if (clock() > deadline) { break; }
+#endif
+
+    }
     return m;
 }
 
