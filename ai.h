@@ -8,7 +8,7 @@
 #include "board.h"
 #include "moves.h"
 
-#define MAX_DEPTH 5
+#define MAX_DEPTH 10
 #define MAX_SECONDS 1
 
 #ifdef MAX_SECONDS
@@ -134,10 +134,11 @@ int runSearch(struct board *b, int depth, int alpha, int beta, struct move *best
         }
 
         alpha = MAX(alpha, best_score);
-        if (alpha >= beta)
-        {
-            break;
-        }
+        if (alpha >= beta) { break; }
+
+#ifdef MAX_SECONDS
+        if (clock() > deadline) { break; }
+#endif
     }
 
     // If this is the top level, provide the move itself, not just the score
@@ -162,11 +163,6 @@ struct move getComputerMove(struct board *b)
     for (int depth = 1; depth <= MAX_DEPTH; depth++)
     {
         runSearch(b, depth, -INT_MAX, INT_MAX, &m);
-
-#ifdef MAX_SECONDS
-        if (clock() > deadline) { break; }
-#endif
-
     }
     return m;
 }
